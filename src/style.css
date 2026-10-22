@@ -12,3 +12,6 @@
 .upload-icon svg{width:28px;height:28px;display:block}
 
 .hotel-brand .fixed-hotel-logo{display:block;width:74cqw;max-width:90%;height:auto;max-height:9.5cqw;object-fit:contain}
+
+.header-title{font-size:14px;font-weight:500;color:#5b6854;white-space:nowrap}.heading h1{letter-spacing:0}.heading p:not(.eyebrow){line-height:1.8}.print-hint{line-height:1.9}
+@media(max-width:760px){.heading h1{font-size:26px}.heading p:not(.eyebrow){font-size:12px}.upload-options{gap:10px}.steps{gap:9px}.steps i{font-size:10px}.steps span{font-size:10px}.list-footer{align-items:flex-start}.privacy-note{font-size:10px}.topbar .header-title{font-size:13px}}

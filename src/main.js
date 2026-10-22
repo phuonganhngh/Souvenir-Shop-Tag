@@ -23,36 +23,36 @@ try {
 } catch { storageWarning = true; }
 
 document.querySelector('#app').innerHTML = `
-<header class="topbar"><a class="brand" href="./"><span class="brand-icon">栞</span><span>Tag Studio<small>NOBORIBETSU GRAND HOTEL</small></span></a><span class="local-badge"><i></i> Dữ liệu chỉ lưu trên máy bạn</span><button id="help" class="button ghost">Hướng dẫn <span>↗</span></button></header>
+<header class="topbar"><span class="header-title">プライスタグ作成</span><span class="local-badge"><i></i> データはこの端末に保存されます</span><button id="help" class="button ghost">使い方 <span>↗</span></button></header>
 <main>
-  <section class="heading"><div><p class="eyebrow">CÔNG CỤ DÀNH CHO CỬA HÀNG</p><h1>Tag giá đẹp.<br class="mobile-break"> Sẵn sàng trong vài phút.</h1><p>Nhập danh sách, kiểm tra và in. Ai cũng có thể tự làm.</p></div><button id="print-top" class="button primary">▣ &nbsp; In / Lưu PDF</button></section>
-  <nav class="steps" aria-label="Quy trình"><span><b>1</b> Nhập sản phẩm</span><i>→</i><span><b>2</b> Kiểm tra tag</span><i>→</i><span><b>3</b> In hàng loạt</span></nav>
+  <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1><p>商品リストを入力し、内容を確認して印刷。どなたでも簡単に作成できます。</p></div><button id="print-top" class="button primary">▣ &nbsp; 印刷・PDF保存</button></section>
+  <nav class="steps" aria-label="作成の流れ"><span><b>1</b> 商品を入力</span><i>→</i><span><b>2</b> タグを確認</span><i>→</i><span><b>3</b> まとめて印刷</span></nav>
   <div id="notice" class="notice" role="status" hidden></div>
   <div class="workspace">
     <section class="panel data-panel">
-      <div class="section-heading"><div><span class="section-number">01</span><h2>Danh sách sản phẩm</h2></div><span id="total" class="pill"></span></div>
-      <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Tải danh sách Excel lên</strong><span>Kéo thả file hoặc <u>chọn từ máy tính</u></span><small>.xlsx · Tối đa 5 MB · 2.000 sản phẩm</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
-      <div class="upload-options"><button id="template" class="text-button">↓ Tải Excel mẫu</button><button id="sample" class="text-button">Dùng danh sách ban đầu</button></div>
-      <div id="sheet-control" class="sheet-control" hidden><label for="sheet">Sheet sản phẩm</label><select id="sheet"></select><button class="button" id="import-sheet">Nhập sheet</button></div>
-      <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="Tìm tên sản phẩm…" aria-label="Tìm sản phẩm"></label><button id="add" class="button">+ Thêm</button></div>
-      <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="Chọn tất cả"> SẢN PHẨM</label><span>GIÁ / BẢN IN</span></div>
+      <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
+      <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
+      <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button><button id="sample" class="text-button">初期リストを使う</button></div>
+      <div id="sheet-control" class="sheet-control" hidden><label for="sheet">商品シート</label><select id="sheet"></select><button class="button" id="import-sheet">シートを取り込む</button></div>
+      <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label><button id="add" class="button">+ 追加</button></div>
+      <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
-      <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">Xóa sản phẩm đang sửa</button></div>
-      <details class="editor" open><summary>Chỉnh sửa sản phẩm <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['Tên tiếng Nhật *','Tiếng Anh','Tiếng Hàn','Tiếng Trung giản thể','Tiếng Trung phồn thể','Giá bán (JPY) *','Ghi chú thuế / loại'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? 'VD: 税込・各種; để trống nếu chưa xác nhận' : ''}"></label>`).join('')}</div><p class="form-hint">Tên và bản dịch được giữ nguyên từ danh sách. Không tự dịch hoặc tự thêm thuế.</p></form></details>
+      <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の商品を削除</button></div>
+      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はリストの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form></details>
     </section>
     <aside class="preview-column">
-      <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>Xem trước tag</h2></div><span class="live"><i></i> Trực tiếp</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
-      <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>Thiết lập bản in</h2></div><span class="pill">A4</span></div>
-        <label class="field">Kích thước tag<select id="size"><option value="90,55">90 × 55 mm · 8 tag / trang</option><option value="100,60">100 × 60 mm · 4 tag / trang</option><option value="180,110">180 × 110 mm · 2 tag / trang</option></select></label>
-        <label class="toggle-row"><span>Viền họa tiết màu vàng</span><input type="checkbox" id="pattern" checked></label>
-        <div class="print-summary"><span id="print-count"></span><small>Khổ A4 dọc · Tỷ lệ in 100%</small></div><button id="print" class="button primary full">▣ &nbsp; In / Lưu PDF</button><p class="print-hint">Chọn “Lưu dưới dạng PDF” trong cửa sổ in.<br>Bật đồ họa nền, tắt đầu trang và chân trang.</p>
+      <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
+      <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
+        <label class="field">タグのサイズ<select id="size"><option value="90,55">90 × 55 mm · 1ページ8枚</option><option value="100,60">100 × 60 mm · 1ページ4枚</option><option value="180,110">180 × 110 mm · 1ページ2枚</option></select></label>
+        <label class="toggle-row"><span>金色の模様を表示</span><input type="checkbox" id="pattern" checked></label>
+        <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ &nbsp; 印刷・PDF保存</button><p class="print-hint">印刷画面で「PDFに保存」を選択してください。<br>背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。</p>
       </section>
-      <p class="privacy-note">♧ &nbsp; Excel được xử lý ngay trong trình duyệt.<br>Không cần đăng nhập. Không gửi dữ liệu lên máy chủ.</p>
+      <p class="privacy-note">♧ &nbsp; Excelの処理はブラウザー内で完結します。<br>ログイン不要。データをサーバーに送信しません。</p>
     </aside>
   </div>
-  <footer>TAG STUDIO <span>Đơn giản hóa công việc mỗi ngày.</span><button class="text-button" id="clear">Xóa dữ liệu đã lưu trên máy</button></footer>
+  <footer><span>登別グランドホテル</span><button class="text-button" id="clear">この端末の保存データを削除</button></footer>
 </main><div id="print-pages" aria-hidden="true"></div>
-<dialog id="guide"><button id="close-guide" class="button close" aria-label="Đóng">×</button><p class="eyebrow">BẮT ĐẦU TRONG 3 BƯỚC</p><h2>Từ danh sách đến tag giá</h2><ol><li><strong>Nhập sản phẩm.</strong> Dùng danh sách có sẵn, tải file .xlsx hoặc bấm “Thêm”. File cần dòng tiêu đề như Excel mẫu; bạn có thể chọn sheet.</li><li><strong>Kiểm tra.</strong> Bấm vào tên sản phẩm để sửa, chọn ô đánh dấu để in và điều chỉnh số bản. Kiểm tra giá, bản dịch và thông tin thuế trước khi in.</li><li><strong>In hoặc lưu PDF.</strong> Chọn khổ A4 dọc, tỷ lệ 100%, bật đồ họa nền, tắt đầu/chân trang. Các tag được chia trang tự động và có viền cắt.</li></ol><p>Chỉ ghi “税込” khi đã xác nhận giá gồm thuế. Logo khách sạn được cố định trên tất cả tag.</p><p>Dữ liệu được tự lưu trong trình duyệt này. Máy khác cần tải lại Excel. Đừng dùng “Xóa dữ liệu” nếu bạn chưa lưu danh sách cần giữ.</p><button id="export" class="button">↓ Xuất danh sách hiện tại ra Excel</button></dialog>`;
+<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>初期リストを使うか、.xlsx ファイルを取り込むか、「追加」から入力します。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p><button id="export" class="button">↓ 現在の商品リストをExcelに書き出す</button></dialog>`;
 
 function notify(message, error = false) {
   $('#notice').textContent = message;
@@ -61,14 +61,14 @@ function notify(message, error = false) {
 }
 function save() {
   try { localStorage.setItem('tag-studio-v1', JSON.stringify({ products, settings })); }
-  catch { if (!storageWarning) notify('Trình duyệt không thể lưu thêm dữ liệu. Hãy xuất Excel để giữ danh sách.', true); storageWarning = true; }
+  catch { if (!storageWarning) notify('ブラウザーにデータを保存できません。商品リストをExcelに書き出してください。', true); storageWarning = true; }
 }
 function active() { return products.find(p => p.id === activeId); }
 function copies() { return products.filter(p => p.selected).reduce((sum, p) => sum + p.quantity, 0); }
 function perPage() { return Math.floor((190 + 4) / (settings.width + 4)) * Math.floor((277 + 4) / (settings.height + 4)); }
 function tag(product) {
   const error = validate(product);
-  return `<article class="tag ${settings.pattern ? 'pattern' : ''}" style="aspect-ratio:${settings.width}/${settings.height}"><div class="tag-content"><div class="hotel-brand"><img class="fixed-hotel-logo" src="${escape(fixedLogo)}" alt="NOBORIBETSU GRAND HOTEL"></div><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">Kiểm tra dữ liệu</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
+  return `<article class="tag ${settings.pattern ? 'pattern' : ''}" style="aspect-ratio:${settings.width}/${settings.height}"><div class="tag-content"><div class="hotel-brand"><img class="fixed-hotel-logo" src="${escape(fixedLogo)}" alt="NOBORIBETSU GRAND HOTEL"></div><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">入力内容を確認</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
 }
 function fitTags(root) {
   let valid = true;
@@ -85,20 +85,20 @@ function fitTags(root) {
 }
 function renderPreview() {
   const product = active();
-  $('#preview').innerHTML = product ? tag(product) : '<p class="empty">Thêm sản phẩm để xem tag.</p>';
-  $('#preview-name').textContent = product?.ja || 'Chưa có sản phẩm';
+  $('#preview').innerHTML = product ? tag(product) : '<p class="empty">商品を追加するとタグが表示されます。</p>';
+  $('#preview-name').textContent = product?.ja || '商品がありません';
   $('#size-caption').textContent = `${settings.width} × ${settings.height} mm`;
   const n = copies();
-  $('#print-count').textContent = `${n} tag · ${Math.ceil(n / perPage())} trang A4`;
-  $('#selected-summary').textContent = `${products.filter(p => p.selected).length} đã chọn · ${n} bản in`;
+  $('#print-count').textContent = `${n}枚・A4 ${Math.ceil(n / perPage())}ページ`;
+  $('#selected-summary').textContent = `${products.filter(p => p.selected).length}商品を選択・合計${n}枚`;
   for (const id of ['#print', '#print-top']) $(id).disabled = n === 0;
   requestAnimationFrame(() => fitTags($('#preview')));
 }
 function renderList() {
   const query = $('#search').value.toLocaleLowerCase();
   const filtered = products.filter(p => fields.some(f => String(p[f]).toLocaleLowerCase().includes(query)));
-  $('#total').textContent = `${products.length} sản phẩm`;
-  $('#product-list').innerHTML = filtered.map(p => `<div class="product-row ${p.id === activeId ? 'active' : ''}" data-id="${p.id}"><input type="checkbox" data-action="select" aria-label="Chọn ${escape(p.ja || 'sản phẩm mới')}" ${p.selected ? 'checked' : ''}><button class="product-name" data-action="edit"><strong>${escape(p.ja || 'Sản phẩm mới')}</strong><small>${escape(validate(p) || p.en || 'Bấm để chỉnh sửa')}</small></button><span class="row-price">${parsePrice(p.price) !== null ? '¥' + parsePrice(p.price).toLocaleString('ja-JP') : '—'}</span><input type="number" class="quantity" data-action="quantity" min="1" max="100" value="${p.quantity}" aria-label="Số bản ${escape(p.ja)}"></div>`).join('') || '<p class="empty">Không có sản phẩm phù hợp.</p>';
+  $('#total').textContent = `${products.length}商品`;
+  $('#product-list').innerHTML = filtered.map(p => `<div class="product-row ${p.id === activeId ? 'active' : ''}" data-id="${p.id}"><input type="checkbox" data-action="select" aria-label="${escape(p.ja || '新しい商品')}を選択" ${p.selected ? 'checked' : ''}><button class="product-name" data-action="edit"><strong>${escape(p.ja || '新しい商品')}</strong><small>${escape(validate(p) || p.en || 'クリックして編集')}</small></button><span class="row-price">${parsePrice(p.price) !== null ? '¥' + parsePrice(p.price).toLocaleString('ja-JP') : '—'}</span><input type="number" class="quantity" data-action="quantity" min="1" max="100" value="${p.quantity}" aria-label="${escape(p.ja)}の部数"></div>`).join('') || '<p class="empty">該当する商品がありません。</p>';
   $('#select-all').checked = products.length > 0 && products.every(p => p.selected);
   $('#select-all').indeterminate = products.some(p => p.selected) && !products.every(p => p.selected);
   renderPreview();
@@ -135,41 +135,41 @@ $('#product-list').addEventListener('change', e => {
 $('#search').addEventListener('input', renderList);
 $('#select-all').addEventListener('change', e => { products.forEach(p => { p.selected = e.target.checked; }); refresh(); });
 $('#add').addEventListener('click', () => {
-  if (products.length >= 2000) return notify('Tối đa 2.000 sản phẩm.', true);
+  if (products.length >= 2000) return notify('商品は最大2,000件まで登録できます。', true);
   const p = makeProducts([Object.fromEntries(fields.map(f => [f, '']))])[0];
   products.unshift(p); activeId = p.id; $('#search').value = ''; refresh();
   $('#edit-form').elements.namedItem('ja').focus();
 });
 $('#delete').addEventListener('click', () => {
   const p = active();
-  if (!p || !confirm(`Xóa “${p.ja || 'Sản phẩm mới'}”?`)) return;
+  if (!p || !confirm(`「${p.ja || '新しい商品'}」を削除しますか？`)) return;
   products = products.filter(item => item.id !== activeId); activeId = products[0]?.id; refresh();
 });
 function replaceProducts(rows) {
-  if (!confirm('Thay danh sách hiện tại? Chọn Hủy nếu bạn cần xuất Excel để lưu các chỉnh sửa trước.')) return;
+  if (!confirm('現在のリストを置き換えますか？編集内容をExcelに保存する場合は、キャンセルして先に書き出してください。')) return;
   products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
-  notify(`Đã nhập ${products.length} sản phẩm. Kiểm tra nội dung trước khi in.`);
+  notify(`${products.length}商品を取り込みました。印刷前に内容を確認してください。`);
 }
 $('#sample').addEventListener('click', () => replaceProducts(sample));
 let excelPromise;
 async function excel() { excelPromise ||= import('exceljs').then(m => m.default); return excelPromise; }
 async function loadExcel(file) {
   if (!file) return;
-  if (!/\.xlsx$/i.test(file.name)) return notify('Hãy dùng file .xlsx. Với .xls, hãy lưu lại thành .xlsx trong Excel.', true);
-  if (file.size > 5 * 1024 * 1024) return notify('File vượt quá 5 MB. Hãy chia nhỏ file rồi thử lại.', true);
-  notify('Đang đọc Excel…');
+  if (!/\.xlsx$/i.test(file.name)) return notify('.xlsx ファイルを選択してください。.xls の場合は、Excelで .xlsx 形式に保存し直してください。', true);
+  if (file.size > 5 * 1024 * 1024) return notify('ファイルサイズが5 MBを超えています。ファイルを分割して再度お試しください。', true);
+  notify('Excelを読み込んでいます…');
   try {
     const Excel = await excel();
     const next = new Excel.Workbook();
     await next.xlsx.load(await file.arrayBuffer());
-    if (!next.worksheets.length) throw new Error('File không có sheet.');
+    if (!next.worksheets.length) throw new Error('ファイルにシートがありません。');
     workbook = next;
     $('#sheet').innerHTML = workbook.worksheets.map((s, i) => `<option value="${i}">${escape(s.name)}</option>`).join('');
-    const index = workbook.worksheets.findIndex(s => s.name === 'Multilingual Products');
+    const index = workbook.worksheets.findIndex(s => ['商品一覧', 'Multilingual Products'].includes(s.name));
     $('#sheet').value = String(Math.max(index, 0));
     $('#sheet-control').hidden = false;
-    notify(`Đã đọc “${file.name}”. Chọn sheet rồi bấm “Nhập sheet” để thay danh sách.`);
-  } catch { notify('Không đọc được file Excel. Hãy kiểm tra file không bị khóa mật khẩu hoặc hỏng, rồi lưu lại thành .xlsx.', true); }
+    notify(`「${file.name}」を読み込みました。シートを選択し、「シートを取り込む」を押してください。`);
+  } catch { notify('Excelを読み込めません。パスワード保護やファイルの破損を確認し、.xlsx 形式で保存し直してください。', true); }
 }
 $('#excel-input').addEventListener('change', async e => { await loadExcel(e.target.files[0]); e.target.value = ''; });
 $('#import-sheet').addEventListener('click', () => { try { replaceProducts(readWorksheet(workbook.worksheets[Number($('#sheet').value)])); } catch (error) { notify(error.message, true); } });
@@ -179,27 +179,27 @@ for (const name of ['dragover','dragleave','drop']) $('#drop-zone').addEventList
 });
 async function downloadExcel(rows, filename) {
   try {
-    const Excel = await excel(), book = new Excel.Workbook(), sheet = book.addWorksheet('Multilingual Products');
-    sheet.addRow(['No.', ...headers]);
+    const Excel = await excel(), book = new Excel.Workbook(), sheet = book.addWorksheet('商品一覧');
+    sheet.addRow(['番号', ...headers]);
     rows.forEach((p, i) => sheet.addRow([i + 1, ...fields.map(key => key === 'price' && parsePrice(p[key]) !== null ? parsePrice(p[key]) : p[key])]));
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     sheet.getRow(1).fill = { type:'pattern', pattern:'solid', fgColor: { argb:'FF927555' } };
     sheet.columns.forEach((col, i) => { col.width = i === 0 ? 7 : i === 6 ? 16 : 32; });
     const url = URL.createObjectURL(new Blob([await book.xlsx.writeBuffer()], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
     const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
-  } catch { notify('Không thể tạo file Excel. Vui lòng thử lại.', true); }
+  } catch { notify('Excelファイルを作成できません。もう一度お試しください。', true); }
 }
-$('#template').addEventListener('click', () => downloadExcel(sample.slice(0, 1), 'Tag-gia-mau.xlsx'));
-$('#export').addEventListener('click', () => downloadExcel(products, 'Danh-sach-tag-gia.xlsx'));
+$('#template').addEventListener('click', () => downloadExcel(sample.slice(0, 1), '商品リスト_テンプレート.xlsx'));
+$('#export').addEventListener('click', () => downloadExcel(products, '商品リスト.xlsx'));
 $('#size').value = `${settings.width},${settings.height}`;
 $('#size').addEventListener('change', e => { [settings.width, settings.height] = e.target.value.split(',').map(Number); renderPreview(); save(); });
 $('#pattern').checked = settings.pattern;
 $('#pattern').addEventListener('change', e => { settings.pattern = e.target.checked; renderPreview(); save(); });
 async function printTags() {
   const selected = products.filter(p => p.selected), invalid = selected.find(p => validate(p));
-  if (invalid) return notify(`Chưa thể in “${invalid.ja || 'Sản phẩm mới'}”: ${validate(invalid)}.`, true);
-  if (!copies()) return notify('Chọn ít nhất một sản phẩm để in.', true);
-  if (copies() > 1000) return notify('Mỗi lần in tối đa 1.000 tag. Hãy giảm số bản hoặc chia nhóm sản phẩm.', true);
+  if (invalid) return notify(`「${invalid.ja || '新しい商品'}」を印刷できません：${validate(invalid)}。`, true);
+  if (!copies()) return notify('印刷する商品を1件以上選択してください。', true);
+  if (copies() > 1000) return notify('1回に印刷できるのは最大1,000枚です。部数を減らすか、商品を分けて印刷してください。', true);
   const tags = selected.flatMap(p => Array.from({length:p.quantity}, () => p));
   const count = perPage();
   let html = '';
@@ -211,14 +211,14 @@ async function printTags() {
   await Promise.all([...$('#print-pages').querySelectorAll('img')].map(img => img.decode().catch(() => {})));
   const fits = fitTags($('#print-pages'));
   $('#print-pages').classList.remove('preparing');
-  if (!fits) return notify('Có nội dung quá dài so với tag. Hãy rút gọn tên / ghi chú hoặc kiểm tra lại nội dung trước khi in.', true);
+  if (!fits) return notify('タグに収まらない内容があります。商品名や備考を短くし、印刷前に内容を確認してください。', true);
   window.print();
 }
 $('#print').addEventListener('click', printTags); $('#print-top').addEventListener('click', printTags);
 $('#help').addEventListener('click', () => $('#guide').showModal());
 $('#close-guide').addEventListener('click', () => $('#guide').close());
-$('#clear').addEventListener('click', () => { if (confirm('Xóa toàn bộ chỉnh sửa đã lưu trên trình duyệt này, rồi trở về danh sách ban đầu?')) { localStorage.removeItem('tag-studio-v1'); location.reload(); } });
+$('#clear').addEventListener('click', () => { if (confirm('このブラウザーに保存された編集内容をすべて削除して、初期リストに戻しますか？')) { localStorage.removeItem('tag-studio-v1'); location.reload(); } });
 refresh();
 new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview'));
 document.fonts.ready.then(() => fitTags($('#preview')));
-if (storageWarning) notify('Trình duyệt hạn chế lưu dữ liệu. Hãy xuất Excel trước khi đóng trang.', true);
+if (storageWarning) notify('このブラウザーではデータの保存が制限されています。画面を閉じる前にExcelに書き出してください。', true);

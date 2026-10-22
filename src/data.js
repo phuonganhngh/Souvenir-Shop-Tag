@@ -15,8 +15,8 @@ export function parsePrice(value) {
   return /^\d+$/.test(text) && Number.isSafeInteger(Number(text)) ? Number(text) : null;
 }
 export function validate(product) {
-  if (!String(product.ja || '').trim()) return 'Thiếu tên tiếng Nhật';
-  if (parsePrice(product.price) === null) return 'Giá phải là số nguyên JPY từ 0 trở lên';
+  if (!String(product.ja || '').trim()) return '日本語の商品名を入力してください';
+  if (parsePrice(product.price) === null) return '価格は0以上の整数（円）で入力してください';
   return '';
 }
 export function readWorksheet(sheet) {
@@ -26,18 +26,18 @@ export function readWorksheet(sheet) {
     const index = headers.findIndex(h => h.toLowerCase().replace(/\s/g, '') === text);
     if (index >= 0) mapping[fields[index]] = col;
   });
-  if (!mapping.ja || !mapping.price) throw new Error('Cần cột 日本語 và 価格 (JPY) ở dòng đầu. Hãy tải Excel mẫu để xem đúng cấu trúc.');
-  if (sheet.rowCount > 2001) throw new Error('Mỗi sheet hỗ trợ tối đa 2.000 dòng. Hãy chia nhỏ danh sách.');
+  if (!mapping.ja || !mapping.price) throw new Error('1行目に「日本語」と「価格 (JPY)」の列が必要です。Excelテンプレートで見出しを確認してください。');
+  if (sheet.rowCount > 2001) throw new Error('1シートにつき商品は最大2,000行です。リストを分割してください。');
   const products = [], errors = [];
   sheet.eachRow((row, number) => {
     if (number === 1) return;
     const product = Object.fromEntries(fields.map(key => [key, mapping[key] ? cellText(row.getCell(mapping[key]).value) : '']));
     if (Object.values(product).every(x => !x)) return;
     const error = validate(product);
-    if (error) errors.push(`Dòng ${number}: ${error}`);
+    if (error) errors.push(`${number}行目：${error}`);
     products.push(product);
   });
-  if (errors.length) throw new Error(errors.slice(0, 8).join('\n') + (errors.length > 8 ? `\n… và ${errors.length - 8} lỗi khác` : ''));
-  if (!products.length) throw new Error('Sheet chưa có sản phẩm.');
+  if (errors.length) throw new Error(errors.slice(0, 8).join('\n') + (errors.length > 8 ? `\n…ほか${errors.length - 8}件のエラー` : ''));
+  if (!products.length) throw new Error('シートに商品がありません。');
   return products;
 }

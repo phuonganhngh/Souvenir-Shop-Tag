@@ -18,8 +18,8 @@ test('maps reordered columns, preserves missing tax and formula results', () => 
 test('rejects incorrect sheet and invalid rows without partially importing', () => {
   const book = new Excel.Workbook(), notes = book.addWorksheet('Notes');
   notes.addRow(['Field','Explanation']);
-  assert.throws(() => readWorksheet(notes), /Cần cột/);
+  assert.throws(() => readWorksheet(notes), /列が必要/);
   const sheet = book.addWorksheet('Products');
   sheet.addRow(headers); sheet.addRow(['商品','','','','','bad']);
-  assert.throws(() => readWorksheet(sheet), /Dòng 2/);
+  assert.throws(() => readWorksheet(sheet), /2行目/);
 });
