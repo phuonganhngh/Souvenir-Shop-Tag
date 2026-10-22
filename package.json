@@ -12,7 +12,8 @@
     "build:portable": "vite build --config vite.portable.config.js",
     "start": "node server/index.js",
     "dev:api": "node server/index.js",
-    "test:access": "node tests/access.browser.mjs"
+    "test:access": "node tests/access.browser.mjs",
+    "test:restaurant": "node tests/restaurant.browser.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-jp": "^5.3.1",
