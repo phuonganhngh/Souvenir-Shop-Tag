@@ -13,12 +13,12 @@ const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
 let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
-let settings = { width: 90, height: 55, pattern: true };
+let settings = { width: 90, height: 55, pattern: false };
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
   if (saved?.products?.length) {
     products = saved.products;
-    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55, pattern: saved.settings?.pattern ?? true };
+    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55, pattern: false };
     activeId = products[0].id;
   }
 } catch { storageWarning = true; }
@@ -69,7 +69,7 @@ function copies() { return products.filter(p => p.selected).reduce((sum, p) => s
 function perPage() { return Math.floor((190 + 4) / (settings.width + 4)) * Math.floor((277 + 4) / (settings.height + 4)); }
 function tag(product) {
   const error = validate(product);
-  return `<article class="tag ${settings.pattern ? 'pattern' : ''}" style="aspect-ratio:${settings.width}/${settings.height}"><div class="tag-content"><div class="hotel-brand"><img class="fixed-hotel-logo" src="${escape(fixedLogo)}" alt="NOBORIBETSU GRAND HOTEL"></div><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">入力内容を確認</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
+  return `<article class="tag" style="aspect-ratio:${settings.width}/${settings.height}"><div class="tag-content"><div class="hotel-brand"><img class="fixed-hotel-logo" src="${escape(fixedLogo)}" alt="NOBORIBETSU GRAND HOTEL"></div><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">入力内容を確認</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
 }
 function fitTags(root) {
   let valid = true;
