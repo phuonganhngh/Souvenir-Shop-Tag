@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
-import { translationHandler } from './translate.js';
 import { verifySession, passwordConfigured, loginPage } from './auth.js';
 import sessionHandler from '../api/session.js';
 
@@ -14,7 +13,10 @@ createServer(async (req, res) => {
     res.writeHead(api ? 401 : passwordConfigured() ? 200 : 503, { 'Content-Type':api ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8', 'Cache-Control':'no-store' });
     return res.end(api ? JSON.stringify({error:'ログインが必要です。ページを再読み込みしてください。'}) : loginPage(passwordConfigured()));
   }
-  if (req.url.split('?')[0] === '/api/translate') return translationHandler(req, res);
+  if (req.url.startsWith('/api/')) {
+    res.writeHead(404, { 'Content-Type':'application/json; charset=utf-8' });
+    return res.end(JSON.stringify({ error:'このAPIはありません。' }));
+  }
   if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }

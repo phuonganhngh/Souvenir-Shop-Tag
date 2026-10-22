@@ -20,7 +20,7 @@ test('hosting middleware protects the page and API, and passes valid sessions', 
   try {
     const page = await middleware(new Request('https://example.com/'));
     assert.match(await page.text(), /type="password"/);
-    const api = await middleware(new Request('https://example.com/api/translate'));
+    const api = await middleware(new Request('https://example.com/api/private'));
     assert.equal(api.status,401);
     const cookie = sessionCookie(await createSession(password));
     const authorized = await middleware(new Request('https://example.com/',{headers:{cookie}}));

@@ -27,7 +27,7 @@ try {
  assert.match(await page.locator('#guide').textContent(), /かんたん3ステップ/);
  await page.getByRole('button', {name:'閉じる', exact:true}).click();
  assert.equal(await page.locator('#product-list .product-row').count(),14);
- assert.equal(await page.locator('#logo-input, #remove-logo, #hotel').count(), 0);
+ assert.equal(await page.locator('#logo-input, #remove-logo, #hotel, #translate, #auto-translate').count(), 0);
  await page.locator('#preview .fixed-hotel-logo').evaluate(img => img.decode());
  assert.ok(await page.locator('#preview .fixed-hotel-logo').evaluate(img => img.naturalWidth > 0));
  assert.match(await page.locator('#print-count').textContent(),/14枚・A4 2ページ/);
@@ -51,6 +51,8 @@ try {
  const path = await download.path();
  const template = new Excel.Workbook(); await template.xlsx.readFile(path);
  assert.equal(template.worksheets[0].getCell('B2').value,'じゃがりこ');
+ assert.equal(template.worksheets[0].getCell('C2').value,'Jagarico Potato Sticks');
+ assert.equal(template.worksheets[0].getCell('F2').value,'Jagarico馬鈴薯條');
  await page.getByRole('button', {name:'使い方'}).click();
  const exportWait = page.waitForEvent('download');
  await page.locator('#export').click();
@@ -80,44 +82,6 @@ try {
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth));
  await page.screenshot({path:`${dir}/mobile.png`,fullPage:true});
- console.log('Checking automatic translation and Excel export…');
- // Simulated provider response: validates Japanese-only import and export, not live translation quality.
- await page.setViewportSize({width:1440,height:1100});
- const japanese = new Excel.Workbook(), japaneseSheet = japanese.addWorksheet('商品一覧');
- japaneseSheet.addRow(['日本語','価格 (JPY)','English']);
- japaneseSheet.addRow(['じゃがりこ',170,'Official English name']);
- japaneseSheet.addRow(['きのこそば',648,'']);
- const japaneseFile = `${dir}/japanese-only.xlsx`; await japanese.xlsx.writeFile(japaneseFile);
- let translationCalls = 0;
- await page.route('**/api/translate', async route => {
-   const body = route.request().postDataJSON(); translationCalls++;
-   assert.equal(body.products.length,2);
-   assert.equal(body.products[0].price,undefined);
-   assert.deepEqual(body.products[0].missing,['ko','zh','tw']);
-   await route.fulfill({json:{products:body.products.map(p=>({id:p.id,ja:p.ja,en:'Machine English',ko:'한국어 번역',zh:'简体中文翻译',tw:'繁體中文翻譯'}))}});
- });
- await page.locator('#excel-input').setInputFiles(japaneseFile);
- await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('japanese-only.xlsx') && document.querySelector('#notice').textContent.includes('読み込みました'));
- await page.locator('#import-sheet').click();
- await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('件の翻訳を追加'));
- assert.equal(translationCalls,1);
- assert.equal(await page.locator('#edit-form [name="en"]').inputValue(),'Official English name');
- assert.equal(await page.locator('#edit-form [name="tw"]').inputValue(),'繁體中文翻譯');
- await page.getByRole('button',{name:'使い方'}).click();
- const translatedDownloadWait = page.waitForEvent('download'); await page.locator('#export').click();
- const translatedBook = new Excel.Workbook(); await translatedBook.xlsx.readFile(await (await translatedDownloadWait).path());
- assert.equal(translatedBook.worksheets[0].getCell('C2').value,'Official English name');
- assert.equal(translatedBook.worksheets[0].getCell('F2').value,'繁體中文翻譯');
- await page.getByRole('button',{name:'閉じる',exact:true}).click();
- await page.unroute('**/api/translate');
- await page.route('**/api/translate',route=>route.fulfill({status:503,json:{error:'自動翻訳の設定が完了していません。'}}));
- await page.locator('#excel-input').setInputFiles(japaneseFile);
- await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('japanese-only.xlsx') && document.querySelector('#notice').textContent.includes('読み込みました'));
- await page.locator('#import-sheet').click();
- await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('日本語の商品データは保持'));
- assert.equal(await page.locator('#edit-form [name="ja"]').inputValue(),'じゃがりこ');
- assert.equal(await page.locator('#edit-form [name="ko"]').inputValue(),'');
- assert.equal(await page.locator('#product-list .product-row').count(),2);
  assert.deepEqual(errors,[]);
  console.log('PASS: Excel upload, invalid sheet, edit, persistence, tax blanks, invalid price, template download, 14 print tags, A4 layout, mobile. Artifacts:',dir);
 } finally { await browser.close(); }

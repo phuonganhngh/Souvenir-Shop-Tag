@@ -10,8 +10,8 @@
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.mjs",
     "build:portable": "vite build --config vite.portable.config.js",
-    "start": "node --use-env-proxy server/index.js",
-    "dev:api": "node --use-env-proxy server/index.js",
+    "start": "node server/index.js",
+    "dev:api": "node server/index.js",
     "test:access": "node tests/access.browser.mjs"
   },
   "dependencies": {

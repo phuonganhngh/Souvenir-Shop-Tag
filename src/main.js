@@ -6,20 +6,19 @@ import './style.css';
 import sample from './sample.json';
 import fixedLogo from './assets/hotel-logo.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
-import { translationTasks, translationBatches, applyTranslations } from './translation.js';
 
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
-let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false, translating = false;
-let settings = { width: 90, height: 55, pattern: true, autoTranslate: true };
+let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
+let settings = { width: 90, height: 55, pattern: true };
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
   if (saved?.products?.length) {
     products = saved.products;
-    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55, pattern: saved.settings?.pattern ?? true, autoTranslate: saved.settings?.autoTranslate ?? true };
+    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55, pattern: saved.settings?.pattern ?? true };
     activeId = products[0].id;
   }
 } catch { storageWarning = true; }
@@ -35,13 +34,12 @@ document.querySelector('#app').innerHTML = `
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
       <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button><button id="sample" class="text-button">初期リストを使う</button></div>
-      <div class="translation-panel"><label><input id="auto-translate" type="checkbox" checked> 取込後に空欄を自動翻訳（Web版）</label><button id="translate" class="button small">空欄を翻訳</button><small>日本語の商品名から英語・韓国語・簡体字・繁体字へ。翻訳済みの欄は保持します。</small></div>
       <div id="sheet-control" class="sheet-control" hidden><label for="sheet">商品シート</label><select id="sheet"></select><button class="button" id="import-sheet">シートを取り込む</button></div>
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label><button id="add" class="button">+ 追加</button></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
       <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の商品を削除</button></div>
-      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">空欄の翻訳は自動翻訳で補完できます。商品名・翻訳を確認してください。税表示は自動追加しません。</p></form></details>
+      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form></details>
     </section>
     <aside class="preview-column">
       <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
@@ -50,12 +48,12 @@ document.querySelector('#app').innerHTML = `
         <label class="toggle-row"><span>金色の模様を表示</span><input type="checkbox" id="pattern" checked></label>
         <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ &nbsp; 印刷・PDF保存</button><p class="print-hint">印刷画面で「PDFに保存」を選択してください。<br>背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。</p>
       </section>
-      <p class="privacy-note">♧ &nbsp; Excelの読み込み・編集・印刷は端末内で処理します。<br>自動翻訳時のみ、日本語の商品名を翻訳サービスへ送信します。</p>
+      <p class="privacy-note">♧ &nbsp; Excelの読み込み・編集・印刷は端末内で処理します。<br>商品データを外部サービスに送信しません。</p>
     </aside>
   </div>
   <footer><span>登別グランドホテル</span><button class="text-button" id="clear">この端末の保存データを削除</button></footer>
 </main><div id="print-pages" aria-hidden="true"></div>
-<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>日本語の商品名と価格だけの .xlsx ファイルを取り込むか、「追加」から入力します。空欄の4言語は自動翻訳で補完できます。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>自動翻訳は翻訳サービスが設定済みのWeb版で利用できます。インターネット接続が必要です。日本語の商品名のみを送信し、価格・備考・Excelファイル自体は送信しません。翻訳結果は正式な商品名と異なる場合があります。必ず確認してください。ファイルを直接開くオフライン版では翻訳を利用できません。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p><button id="export" class="button">↓ 現在の商品リストをExcelに書き出す</button></dialog>`;
+<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>日本語・英語・韓国語・簡体字・繁体字の商品名と価格を入力済みの .xlsx ファイルを取り込むか、「追加」から入力します。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>翻訳はExcelに入力済みの内容を使用します。空欄は自動補完しません。必要な言語の商品名を入力してから印刷してください。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p><button id="export" class="button">↓ 現在の商品リストをExcelに書き出す</button></dialog>`;
 
 function notify(message, error = false) {
   $('#notice').textContent = message;
@@ -149,11 +147,9 @@ $('#delete').addEventListener('click', () => {
   products = products.filter(item => item.id !== activeId); activeId = products[0]?.id; refresh();
 });
 function replaceProducts(rows) {
-  if (translating) return notify('翻訳の完了後にリストを取り込んでください。', true);
   if (!confirm('現在のリストを置き換えますか？編集内容をExcelに保存する場合は、キャンセルして先に書き出してください。')) return;
   products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
   notify(`${products.length}商品を取り込みました。印刷前に内容を確認してください。`);
-  if (settings.autoTranslate && translationTasks(products).length) void translateMissing();
 }
 $('#sample').addEventListener('click', () => replaceProducts(sample));
 let excelPromise;
@@ -194,47 +190,8 @@ async function downloadExcel(rows, filename) {
     const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
   } catch { notify('Excelファイルを作成できません。もう一度お試しください。', true); }
 }
-$('#template').addEventListener('click', () => downloadExcel(sample.slice(0, 1).map(p => ({ ...p, en:'', ko:'', zh:'', tw:'' })), '商品リスト_テンプレート.xlsx'));
+$('#template').addEventListener('click', () => downloadExcel(sample.slice(0, 1), '商品リスト_テンプレート.xlsx'));
 $('#export').addEventListener('click', () => downloadExcel(products, '商品リスト.xlsx'));
-$('#auto-translate').checked = settings.autoTranslate;
-$('#auto-translate').addEventListener('change', e => { settings.autoTranslate = e.target.checked; save(); });
-$('#translate').addEventListener('click', translateMissing);
-async function translateMissing() {
-  if (translating) return;
-  const tasks = translationTasks(products);
-  if (!tasks.length) return notify('翻訳が必要な空欄はありません。日本語の商品名を入力してください。');
-  if (tasks.some(p => p.ja.length > 500)) return notify('自動翻訳する商品名は500文字以内にしてください。', true);
-  if (isPortable || location.protocol === 'file:') return notify('自動翻訳はWeb版で利用できます。管理者から案内されたWeb版のURLを開いてください。Excelの編集・印刷はこのファイルでも利用できます。', true);
-  translating = true;
-  for (const selector of ['#translate', '#excel-input', '#import-sheet', '#sample']) $(selector).disabled = true;
-  $('#translate').textContent = '翻訳中…';
-  let completed = 0, filled = 0;
-  const decoder = document.createElement('textarea');
-  try {
-    for (const batch of translationBatches(tasks)) {
-      notify(`空欄を翻訳しています… ${completed} / ${tasks.length}商品`);
-      const response = await fetch('/api/translate', {
-        method: 'POST', headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ products:batch }), signal: AbortSignal.timeout(60000),
-      });
-      let result;
-      try { result = await response.json(); } catch { throw new Error('自動翻訳に対応したWeb版を開いてください。管理者によるサーバーの設定が必要です。'); }
-      if (!response.ok) throw new Error(result.error || '翻訳できませんでした。再度お試しください。');
-      if (!Array.isArray(result.products)) throw new Error('翻訳結果を読み取れませんでした。');
-      filled += applyTranslations(products, result.products, text => { decoder.innerHTML = text; return decoder.value; });
-      completed += batch.length;
-      refresh();
-    }
-    notify(`${filled}件の翻訳を追加しました。商品名と翻訳を確認してから印刷・Excel書き出しを行ってください。`);
-  } catch (error) {
-    const message = ['TimeoutError','AbortError'].includes(error.name) ? '翻訳がタイムアウトしました。再度お試しください。' : error instanceof TypeError ? '翻訳サーバーに接続できません。インターネット接続とWeb版のURLを確認してください。' : error.message;
-    notify(`${message}${filled ? ` 追加済みの${filled}件は保存されています。「空欄を翻訳」で残りを再試行できます。` : ' 日本語の商品データは保持されています。'}`, true);
-  } finally {
-    translating = false;
-    for (const selector of ['#translate', '#excel-input', '#import-sheet', '#sample']) $(selector).disabled = false;
-    $('#translate').textContent = '空欄を翻訳';
-  }
-}
 $('#size').value = `${settings.width},${settings.height}`;
 $('#size').addEventListener('change', e => { [settings.width, settings.height] = e.target.value.split(',').map(Number); renderPreview(); save(); });
 $('#pattern').checked = settings.pattern;
