@@ -9,18 +9,25 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.mjs",
-    "build:portable": "vite build --config vite.portable.config.js"
+    "build:portable": "vite build --config vite.portable.config.js",
+    "start": "node --use-env-proxy server/index.js",
+    "dev:api": "node --use-env-proxy server/index.js",
+    "test:access": "node tests/access.browser.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-jp": "^5.3.1",
     "@fontsource-variable/noto-sans-kr": "^5.3.1",
     "@fontsource-variable/noto-sans-sc": "^5.3.1",
     "@fontsource-variable/noto-sans-tc": "^5.3.1",
+    "@vercel/edge": "^1.3.3",
     "exceljs": "4.4.0"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "vite": "^6.4.5",
     "vite-plugin-singlefile": "^2.3.4"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

@@ -15,7 +15,9 @@ if (!process.env.EXCEL_FIXTURE) await book.xlsx.writeFile(fixture);
 const browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 try {
  const page = await browser.newPage({viewport:{width:1440,height:1100}}), errors = [];
+ page.setDefaultTimeout(15000);
  page.on('pageerror', e => errors.push(e.message));
+ console.log('Checking editor and workbook workflow…');
  await page.goto(process.env.APP_URL || 'http://127.0.0.1:5173');
  await page.locator('#product-list .product-row').first().waitFor();
  assert.equal(await page.locator('html').getAttribute('lang'), 'ja');
@@ -60,6 +62,7 @@ try {
  assert.equal(updatedWorkbook.worksheets[0].getCell('G5').value, 300);
  assert.equal(updatedWorkbook.worksheets[0].getCell('H5').value, '');
  await page.getByRole('button', {name:'閉じる', exact:true}).click();
+ console.log('Checking A4 print layout…');
  await page.evaluate(()=>window.print=()=>{window.printCalled=true});
  await page.locator('#print').click();
  await page.waitForFunction(()=>window.printCalled===true);
@@ -77,6 +80,44 @@ try {
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth));
  await page.screenshot({path:`${dir}/mobile.png`,fullPage:true});
+ console.log('Checking automatic translation and Excel export…');
+ // Simulated provider response: validates Japanese-only import and export, not live translation quality.
+ await page.setViewportSize({width:1440,height:1100});
+ const japanese = new Excel.Workbook(), japaneseSheet = japanese.addWorksheet('商品一覧');
+ japaneseSheet.addRow(['日本語','価格 (JPY)','English']);
+ japaneseSheet.addRow(['じゃがりこ',170,'Official English name']);
+ japaneseSheet.addRow(['きのこそば',648,'']);
+ const japaneseFile = `${dir}/japanese-only.xlsx`; await japanese.xlsx.writeFile(japaneseFile);
+ let translationCalls = 0;
+ await page.route('**/api/translate', async route => {
+   const body = route.request().postDataJSON(); translationCalls++;
+   assert.equal(body.products.length,2);
+   assert.equal(body.products[0].price,undefined);
+   assert.deepEqual(body.products[0].missing,['ko','zh','tw']);
+   await route.fulfill({json:{products:body.products.map(p=>({id:p.id,ja:p.ja,en:'Machine English',ko:'한국어 번역',zh:'简体中文翻译',tw:'繁體中文翻譯'}))}});
+ });
+ await page.locator('#excel-input').setInputFiles(japaneseFile);
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('japanese-only.xlsx') && document.querySelector('#notice').textContent.includes('読み込みました'));
+ await page.locator('#import-sheet').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('件の翻訳を追加'));
+ assert.equal(translationCalls,1);
+ assert.equal(await page.locator('#edit-form [name="en"]').inputValue(),'Official English name');
+ assert.equal(await page.locator('#edit-form [name="tw"]').inputValue(),'繁體中文翻譯');
+ await page.getByRole('button',{name:'使い方'}).click();
+ const translatedDownloadWait = page.waitForEvent('download'); await page.locator('#export').click();
+ const translatedBook = new Excel.Workbook(); await translatedBook.xlsx.readFile(await (await translatedDownloadWait).path());
+ assert.equal(translatedBook.worksheets[0].getCell('C2').value,'Official English name');
+ assert.equal(translatedBook.worksheets[0].getCell('F2').value,'繁體中文翻譯');
+ await page.getByRole('button',{name:'閉じる',exact:true}).click();
+ await page.unroute('**/api/translate');
+ await page.route('**/api/translate',route=>route.fulfill({status:503,json:{error:'自動翻訳の設定が完了していません。'}}));
+ await page.locator('#excel-input').setInputFiles(japaneseFile);
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('japanese-only.xlsx') && document.querySelector('#notice').textContent.includes('読み込みました'));
+ await page.locator('#import-sheet').click();
+ await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('日本語の商品データは保持'));
+ assert.equal(await page.locator('#edit-form [name="ja"]').inputValue(),'じゃがりこ');
+ assert.equal(await page.locator('#edit-form [name="ko"]').inputValue(),'');
+ assert.equal(await page.locator('#product-list .product-row').count(),2);
  assert.deepEqual(errors,[]);
  console.log('PASS: Excel upload, invalid sheet, edit, persistence, tax blanks, invalid price, template download, 14 print tags, A4 layout, mobile. Artifacts:',dir);
 } finally { await browser.close(); }

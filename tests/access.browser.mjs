@@ -1,0 +1,32 @@
+import { chromium } from '@playwright/test';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import assert from 'node:assert/strict';
+const port = 8791, origin = `http://127.0.0.1:${port}`, password = 'test-only-password-123';
+const server = spawn(process.execPath, ['server/index.js'], {env:{...process.env,PORT:String(port),APP_PASSWORD:password,GOOGLE_TRANSLATE_API_KEY:''},stdio:['ignore','pipe','pipe']});
+let browser;
+try {
+  const timeout = new Promise((_,reject) => { const timer = setTimeout(()=>reject(Error('Test server timeout')),10000); timer.unref(); });
+  await Promise.race([once(server.stdout,'data'), once(server,'exit').then(()=>{throw Error('Test server failed');}), timeout]);
+  browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+  const page = await browser.newPage(); await page.goto(origin);
+  assert.equal(await page.locator('#app').count(),0);
+  await page.locator('#password').fill('incorrect'); await page.getByRole('button',{name:'ログイン',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#error').textContent.includes('正しくありません'));
+  await page.locator('#password').fill(password); await page.getByRole('button',{name:'ログイン',exact:true}).click();
+  await page.locator('#product-list .product-row').first().waitFor();
+  assert.equal(await page.locator('.product-row').count(),14);
+  const cookie = (await page.context().cookies()).find(c=>c.name==='hotel_access');
+  assert.equal(cookie.httpOnly,true); assert.equal(cookie.sameSite,'Lax');
+  const translation = await page.request.post(origin+'/api/translate',{data:{products:[{id:'1',ja:'商品',missing:['en']}]}});
+  assert.equal(translation.status(),503); assert.match((await translation.json()).error,/設定が完了/);
+  const anonymous = await browser.newContext();
+  const denied = await anonymous.request.post(origin+'/api/translate',{data:{products:[{id:'1',ja:'商品',missing:['en']}]}});
+  assert.equal(denied.status(),401);
+  const csrf = await anonymous.request.post(origin+'/api/session',{headers:{origin:'https://other.example'},data:{password}});
+  assert.equal(csrf.status(),403);
+  await page.locator('#logout').waitFor({state:'visible'}); await page.locator('#logout').click();
+  await page.locator('#password').waitFor(); assert.equal(await page.locator('#app').count(),0);
+  await anonymous.close();
+  console.log('PASS: password gate, wrong password, signed HttpOnly session, protected API, explicit missing service config, cross-origin rejection and logout.');
+} finally { if (browser) await browser.close(); server.kill(); }
