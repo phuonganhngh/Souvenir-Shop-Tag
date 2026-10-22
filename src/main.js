@@ -26,34 +26,34 @@ try {
 document.querySelector('#app').innerHTML = `
 <header class="topbar"><span class="header-title">プライスタグ作成</span><span class="local-badge"><i></i> データはこの端末に保存されます</span><button id="help" class="button ghost">使い方 <span>↗</span></button><button id="logout" class="button ghost" hidden>ログアウト</button></header>
 <main>
-  <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1><p>商品リストを入力し、内容を確認して印刷。どなたでも簡単に作成できます。</p></div><button id="print-top" class="button primary">▣ &nbsp; 印刷・PDF保存</button></section>
-  <nav class="steps" aria-label="作成の流れ"><span><b>1</b> 商品を入力</span><i>→</i><span><b>2</b> タグを確認</span><i>→</i><span><b>3</b> まとめて印刷</span></nav>
+  <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1></div></section>
+  
   <div id="notice" class="notice" role="status" hidden></div>
   <div class="workspace">
     <section class="panel data-panel">
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
-      <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button><button id="sample" class="text-button">初期リストを使う</button></div>
-      <div id="sheet-control" class="sheet-control" hidden><label for="sheet">商品シート</label><select id="sheet"></select><button class="button" id="import-sheet">シートを取り込む</button></div>
+      <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button></div>
+      
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label><button id="add" class="button">+ 追加</button></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
       <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の商品を削除</button></div>
-      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form></details>
+      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></details>
     </section>
     <aside class="preview-column">
       <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
       <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
         <label class="field">タグのサイズ<select id="size"><option value="90,55">90 × 55 mm · 1ページ8枚</option><option value="100,60">100 × 60 mm · 1ページ4枚</option><option value="180,110">180 × 110 mm · 1ページ2枚</option></select></label>
-        <label class="toggle-row"><span>金色の模様を表示</span><input type="checkbox" id="pattern" checked></label>
+        
         <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ &nbsp; 印刷・PDF保存</button><p class="print-hint">印刷画面で「PDFに保存」を選択してください。<br>背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。</p>
       </section>
       <p class="privacy-note">♧ &nbsp; Excelの読み込み・編集・印刷は端末内で処理します。<br>商品データを外部サービスに送信しません。</p>
     </aside>
   </div>
-  <footer><span>登別グランドホテル</span><button class="text-button" id="clear">この端末の保存データを削除</button></footer>
+  <footer><span>登別グランドホテル</span></footer>
 </main><div id="print-pages" aria-hidden="true"></div>
-<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>日本語・英語・韓国語・簡体字・繁体字の商品名と価格を入力済みの .xlsx ファイルを取り込むか、「追加」から入力します。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>翻訳はExcelに入力済みの内容を使用します。空欄は自動補完しません。必要な言語の商品名を入力してから印刷してください。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p><button id="export" class="button">↓ 現在の商品リストをExcelに書き出す</button></dialog>`;
+<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>日本語・英語・韓国語・簡体字・繁体字の商品名と価格を入力済みの .xlsx ファイルを取り込むか、「追加」から入力します。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>翻訳はExcelに入力済みの内容を使用します。空欄は自動補完しません。必要な言語の商品名を入力してから印刷してください。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p></dialog>`;
 
 function notify(message, error = false) {
   $('#notice').textContent = message;
@@ -92,7 +92,7 @@ function renderPreview() {
   const n = copies();
   $('#print-count').textContent = `${n}枚・A4 ${Math.ceil(n / perPage())}ページ`;
   $('#selected-summary').textContent = `${products.filter(p => p.selected).length}商品を選択・合計${n}枚`;
-  for (const id of ['#print', '#print-top']) $(id).disabled = n === 0;
+  $('#print').disabled = n === 0;
   requestAnimationFrame(() => fitTags($('#preview')));
 }
 function renderList() {
@@ -147,11 +147,9 @@ $('#delete').addEventListener('click', () => {
   products = products.filter(item => item.id !== activeId); activeId = products[0]?.id; refresh();
 });
 function replaceProducts(rows) {
-  if (!confirm('現在のリストを置き換えますか？編集内容をExcelに保存する場合は、キャンセルして先に書き出してください。')) return;
   products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
   notify(`${products.length}商品を取り込みました。印刷前に内容を確認してください。`);
 }
-$('#sample').addEventListener('click', () => replaceProducts(sample));
 let excelPromise;
 async function excel() { excelPromise ||= import('exceljs').then(m => m.default); return excelPromise; }
 async function loadExcel(file) {
@@ -164,16 +162,11 @@ async function loadExcel(file) {
     const next = new Excel.Workbook();
     await next.xlsx.load(await file.arrayBuffer());
     if (!next.worksheets.length) throw new Error('ファイルにシートがありません。');
-    workbook = next;
-    $('#sheet').innerHTML = workbook.worksheets.map((s, i) => `<option value="${i}">${escape(s.name)}</option>`).join('');
-    const index = workbook.worksheets.findIndex(s => ['商品一覧', 'Multilingual Products'].includes(s.name));
-    $('#sheet').value = String(Math.max(index, 0));
-    $('#sheet-control').hidden = false;
-    notify(`「${file.name}」を読み込みました。シートを選択し、「シートを取り込む」を押してください。`);
+    const sheet = next.worksheets.find(s => ['商品一覧','Multilingual Products','Product List'].includes(s.name)) || next.worksheets[0];
+    replaceProducts(readWorksheet(sheet));
   } catch { notify('Excelを読み込めません。パスワード保護やファイルの破損を確認し、.xlsx 形式で保存し直してください。', true); }
 }
 $('#excel-input').addEventListener('change', async e => { await loadExcel(e.target.files[0]); e.target.value = ''; });
-$('#import-sheet').addEventListener('click', () => { try { replaceProducts(readWorksheet(workbook.worksheets[Number($('#sheet').value)])); } catch (error) { notify(error.message, true); } });
 for (const name of ['dragover','dragleave','drop']) $('#drop-zone').addEventListener(name, e => {
   e.preventDefault(); $('#drop-zone').classList.toggle('dragging', name === 'dragover');
   if (name === 'drop') loadExcel(e.dataTransfer.files[0]);
@@ -194,8 +187,6 @@ $('#template').addEventListener('click', () => downloadExcel(sample.slice(0, 1),
 $('#export').addEventListener('click', () => downloadExcel(products, '商品リスト.xlsx'));
 $('#size').value = `${settings.width},${settings.height}`;
 $('#size').addEventListener('change', e => { [settings.width, settings.height] = e.target.value.split(',').map(Number); renderPreview(); save(); });
-$('#pattern').checked = settings.pattern;
-$('#pattern').addEventListener('change', e => { settings.pattern = e.target.checked; renderPreview(); save(); });
 async function printTags() {
   const selected = products.filter(p => p.selected), invalid = selected.find(p => validate(p));
   if (invalid) return notify(`「${invalid.ja || '新しい商品'}」を印刷できません：${validate(invalid)}。`, true);
@@ -215,10 +206,9 @@ async function printTags() {
   if (!fits) return notify('タグに収まらない内容があります。商品名や備考を短くし、印刷前に内容を確認してください。', true);
   window.print();
 }
-$('#print').addEventListener('click', printTags); $('#print-top').addEventListener('click', printTags);
+$('#print').addEventListener('click', printTags);
 $('#help').addEventListener('click', () => $('#guide').showModal());
 $('#close-guide').addEventListener('click', () => $('#guide').close());
-$('#clear').addEventListener('click', () => { if (confirm('このブラウザーに保存された編集内容をすべて削除して、初期リストに戻しますか？')) { localStorage.removeItem('tag-studio-v1'); location.reload(); } });
 refresh();
 new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview'));
 document.fonts.ready.then(() => fitTags($('#preview')));
