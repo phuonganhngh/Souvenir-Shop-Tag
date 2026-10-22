@@ -1,24 +1,33 @@
-# Tag Studio — Tạo tag giá hàng loạt
+# Tag Studio — プライスタグ一括作成ツール
 
-Công cụ tiếng Việt, dựa trên List.xlsx (14 sản phẩm) và mẫu tag của Noboribetsu Grand Hotel. Tất cả xử lý ở trình duyệt, không cần tài khoản, API hoặc cơ sở dữ liệu.
+登別グランドホテルのプライスタグ見本と、14商品のリスト（List.xlsx）をもとに作成した、ベトナム語の操作画面を持つツールです。すべての処理をブラウザー内で行うため、アカウント、API、データベースは不要です。
 
-## Dành cho người sử dụng
+## ご利用方法
 
-1. Mở bản **Tag-Studio.html** trong Chrome hoặc Edge trên máy tính. Bản này dùng được cả khi không có Internet. Không đổi trình duyệt nếu muốn tiếp tục chỉnh danh sách đã lưu trước đó.
-2. Dùng danh sách ban đầu, bấm **Thêm** để nhập tay, hoặc tải **Excel mẫu**, điền sản phẩm rồi tải lên. Chọn sheet và bấm **Nhập sheet**. Việc nhập thay danh sách hiện tại; xuất Excel trong **Hướng dẫn** trước nếu cần giữ các chỉnh sửa.
-3. Bấm tên sản phẩm để sửa, đánh dấu sản phẩm cần in và nhập số bản. Kiểm tra giá, tên, bản dịch, quy cách sản phẩm và thuế. Chỉ tự thêm “税込” khi đã xác nhận giá gồm thuế. Những ô thuế trống trong Excel được giữ trống.
-4. Chọn kích thước tag. Logo được đóng gói cố định cùng ứng dụng, không có nút tải lên, thay thế hoặc xóa logo. Họa tiết viền được dựng minh họa theo mẫu.
-5. Bấm **In / Lưu PDF**. Chọn **A4 dọc**, **tỷ lệ 100%**, bật **đồ họa nền**, tắt **đầu/chân trang**, kiểm tra phần xem trước. Dùng **Lưu dưới dạng PDF** để tạo PDF. In thử một trang và đo kích thước trước khi in cả lô.
+1. パソコンの Chrome または Edge で **Tag-Studio.html** を開きます。インターネットに接続していなくても利用できます。保存済みのリストを引き続き編集する場合は、同じブラウザーを使用してください。
+2. 初期リストを使用するか、**Thêm（追加）** から手入力します。Excel から取り込む場合は、**Tải Excel mẫu（Excelテンプレートをダウンロード）** でテンプレートを取得し、商品情報を入力してアップロードします。シートを選択して **Nhập sheet（シートを取り込む）** をクリックしてください。取り込みにより現在のリストが置き換わるため、編集内容を残す場合は、事前に **Hướng dẫn（使い方）** から Excel に書き出してください。
+3. 商品名をクリックして内容を編集し、印刷する商品にチェックを入れて部数を指定します。価格、商品名、翻訳、商品のサイズ・種類、税表示を確認してください。「税込」は、価格に税が含まれると確認できた場合のみ入力してください。Excel の税表示欄が空欄の場合は、空欄のまま取り込まれます。
+4. タグのサイズを選択します。ホテルのロゴはアプリに固定で組み込まれており、アップロード・変更・削除するボタンはありません。縁の模様は見本を参考に再現したものです。
+5. **In / Lưu PDF（印刷／PDF保存）** をクリックします。印刷設定を **A4・縦向き・倍率100%** にし、**背景のグラフィックを有効**、**ヘッダーとフッターを無効**にして、プレビューを確認してください。PDF を作成する場合は、印刷先で **PDFに保存** を選択します。大量に印刷する前に、1ページを試し刷りして寸法を確認してください。
 
-Kích thước: 90×55 mm (8 tag/trang), 100×60 mm (4 tag/trang), 180×110 mm (2 tag/trang). Lề A4 10 mm, khoảng cách cắt 4 mm. Nội dung rất dài cần rút gọn hoặc chia dòng phù hợp sau khi xem trước.
+タグのサイズは、90×55 mm（1ページ8枚）、100×60 mm（1ページ4枚）、180×110 mm（1ページ2枚）です。A4 用紙の余白は10 mm、タグ間の裁断用スペースは4 mmです。文章が長すぎる場合は、プレビューを確認し、内容を短くするか適切な位置で改行してください。
 
-Excel: `.xlsx`, tối đa 5 MB / 2.000 dòng; tối đa 100 bản mỗi sản phẩm, 1.000 tag mỗi lần in. Giá là số nguyên JPY không âm. Dòng đầu cần cột `日本語` và `価格 (JPY)`; các cột `English`, `한국어`, `简体中文`, `繁體中文（台灣）`, `価格表示・備考` tùy chọn. Thứ tự cột có thể thay đổi. Sheet Notes không được nhập thành sản phẩm. Không tự dịch hay chạy macro/công thức Excel; chỉ đọc kết quả công thức đã được Excel lưu sẵn.
+### Excel の形式と制限
 
-Dữ liệu lưu bằng localStorage trên thiết bị/trình duyệt đang dùng; chế độ riêng tư hoặc mở file cục bộ có thể hạn chế lưu. Xuất Excel trước khi đóng nếu cần giữ dữ liệu quan trọng. Excel xuất chỉ chứa nội dung sản phẩm, không chứa số bản, lựa chọn in hay thiết lập giao diện. Không có đồng bộ giữa các máy.
+- 対応形式：`.xlsx`。ファイルサイズは最大5 MB、商品データは最大2,000行です。
+- 印刷部数は商品ごとに最大100部、1回の印刷につき合計1,000枚までです。
+- 価格は日本円（JPY）の0以上の整数で入力してください。
+- 1行目の見出しには `日本語` と `価格 (JPY)` が必要です。`English`、`한국어`、`简体中文`、`繁體中文（台灣）`、`価格表示・備考` は任意です。列の順序は変更できます。
+- Notes シートは商品リストとして取り込まないでください。
+- 自動翻訳、マクロの実行、Excel 数式の再計算は行いません。数式のセルについては、Excel に保存済みの計算結果のみを読み取ります。
 
-## Phát triển
+### データの保存
 
-Yêu cầu Node.js 22.12+ (đã kiểm tra Node 24).
+データは使用中の端末・ブラウザーの localStorage に保存されます。プライベートブラウズやローカルファイルの利用時には、保存が制限される場合があります。重要なデータは、画面を閉じる前に Excel に書き出してください。書き出される Excel には商品情報のみが含まれ、印刷部数、印刷対象の選択、画面設定は含まれません。端末間での自動同期はありません。
+
+## 開発者向け
+
+Node.js 22.12 以上が必要です。Node.js 24 で動作確認しています。
 
 ```sh
 cd /workspace/-Tag
@@ -33,10 +42,10 @@ npm run build
 npm run build:portable
 ```
 
-Kiểm thử trình duyệt cần Chromium (`/usr/bin/chromium` mặc định; có thể đặt `CHROMIUM_PATH`). Ứng dụng cần chạy trước tại cổng 5173; có thể thay bằng `APP_URL`. Có thể dùng `EXCEL_FIXTURE=/đường/dẫn/List.xlsx` để kiểm tra file Excel thực tế; mặc định bộ kiểm thử tạo workbook từ 14 sản phẩm có sẵn.
+ブラウザーテストには Chromium が必要です。既定の実行ファイルは `/usr/bin/chromium` で、`CHROMIUM_PATH` で変更できます。テストの前に、ポート5173でアプリを起動してください。接続先は `APP_URL` で変更できます。実際の Excel ファイルを使って確認する場合は、`EXCEL_FIXTURE=/path/to/List.xlsx` を指定してください。既定では、同梱の14商品からテスト用ワークブックを生成します。
 
-`dist/` là bản website tĩnh có thể đưa lên hosting HTTPS. `portable/index.html` là bản gộp toàn bộ mã, thư viện và font thành một file, có thể đổi tên thành `Tag-Studio.html`, chia sẻ rồi mở trực tiếp bằng trình duyệt. Không cần dịch vụ backend. Các font Noto được đóng gói cục bộ với giấy phép SIL Open Font License trong gói font.
+`dist/` は HTTPS 対応のホスティングサービスに配置できる静的サイトです。`portable/index.html` はコード、ライブラリ、フォントをすべて1ファイルにまとめたもので、`Tag-Studio.html` に名前を変更して配布し、ブラウザーで直接開くことができます。バックエンドは不要です。Noto フォントはローカルに同梱されており、フォントパッケージ内の SIL Open Font License が適用されます。
 
-Môi trường cloud đã tách biệt cho từng task: dùng checkout hiện có, không tạo Git worktree nếu người dùng không yêu cầu. Các tiến trình phải khởi động lại khi mở môi trường mới; mã và dependency đã cài có thể được giữ lại qua snapshot.
+クラウド環境はタスクごとに分離されています。既存のチェックアウトを使用し、ユーザーから明示的な依頼がない限り Git worktree を作成しないでください。新しい環境ではプロセスを再起動する必要があります。コードとインストール済みの依存関係は、スナップショットによって保持される場合があります。
 
-Logo cố định sử dụng ảnh gốc `src/assets/hotel-logo.png`. Ảnh được Vite đóng gói trong bản website và nhúng vào bản HTML offline. Logo cũ trong localStorage được bỏ qua để không ghi đè logo cố định.
+固定ロゴには、提供された元画像 `src/assets/hotel-logo.png` を使用しています。この画像は Vite によってサイトに組み込まれ、オフライン版 HTML にも埋め込まれます。固定ロゴが上書きされないよう、localStorage に残っている旧ロゴの設定は使用しません。
