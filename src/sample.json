@@ -1,0 +1,128 @@
+[
+  {
+    "ja": "じゃがりこ",
+    "en": "Jagarico Potato Sticks",
+    "ko": "자가리코 감자 스틱",
+    "zh": "Jagarico薯条",
+    "tw": "Jagarico馬鈴薯條",
+    "price": "170",
+    "note": "税込・各種"
+  },
+  {
+    "ja": "きのこ王国 きのこそば",
+    "en": "Kinoko Kingdom Mushroom Soba",
+    "ko": "버섯 왕국 버섯 소바",
+    "zh": "蘑菇王国蘑菇荞麦面",
+    "tw": "菇菇王國香菇蕎麥麵",
+    "price": "648",
+    "note": "税込"
+  },
+  {
+    "ja": "北海道ラスク いちご",
+    "en": "Hokkaido Strawberry Rusk",
+    "ko": "홋카이도 딸기 러스크",
+    "zh": "北海道草莓烤面包干",
+    "tw": "北海道草莓烤麵包脆片",
+    "price": "497",
+    "note": "税込"
+  },
+  {
+    "ja": "きのこの山",
+    "en": "Kinoko no Yama Chocolate Biscuits",
+    "ko": "키노코노야마 초콜릿 과자",
+    "zh": "蘑菇山巧克力饼干",
+    "tw": "蘑菇山巧克力餅乾",
+    "price": "265",
+    "note": ""
+  },
+  {
+    "ja": "森永 小枝",
+    "en": "Morinaga Koeda Chocolate Sticks",
+    "ko": "모리나가 고에다 초콜릿 스틱",
+    "zh": "森永小枝巧克力棒",
+    "tw": "森永小枝巧克力棒",
+    "price": "378",
+    "note": "税込"
+  },
+  {
+    "ja": "パイの実",
+    "en": "Pie no Mi Chocolate Pastry",
+    "ko": "파이노미 초콜릿 파이",
+    "zh": "巧克力千层酥",
+    "tw": "巧克力千層酥",
+    "price": "207",
+    "note": ""
+  },
+  {
+    "ja": "とんがりコーン",
+    "en": "Tongari Corn Corn Snacks",
+    "ko": "돈가리콘 옥수수 스낵",
+    "zh": "尖角玉米脆",
+    "tw": "尖角玉米脆餅",
+    "price": "194",
+    "note": "税込"
+  },
+  {
+    "ja": "かっぱえびせん",
+    "en": "Kappa Ebisen Shrimp Crackers",
+    "ko": "갓파에비센 새우 과자",
+    "zh": "河童虾条",
+    "tw": "河童蝦條",
+    "price": "164",
+    "note": ""
+  },
+  {
+    "ja": "プチシリーズ",
+    "en": "Petit Series Snacks",
+    "ko": "쁘띠 시리즈 과자",
+    "zh": "Petit系列零食",
+    "tw": "Petit系列零食",
+    "price": "103",
+    "note": ""
+  },
+  {
+    "ja": "ポテトチップス うす塩",
+    "en": "Lightly Salted Potato Chips",
+    "ko": "연한 소금맛 감자칩",
+    "zh": "淡盐味薯片",
+    "tw": "薄鹽洋芋片",
+    "price": "193",
+    "note": ""
+  },
+  {
+    "ja": "カップ麺",
+    "en": "Cup Noodles (Assorted)",
+    "ko": "컵라면 (여러 종류)",
+    "zh": "杯装方便面（多种）",
+    "tw": "杯裝泡麵（多款）",
+    "price": "255",
+    "note": "税込・各種"
+  },
+  {
+    "ja": "たけのこの里",
+    "en": "Takenoko no Sato Chocolate Biscuits",
+    "ko": "다케노코노사토 초콜릿 과자",
+    "zh": "竹笋村巧克力饼干",
+    "tw": "竹筍之里巧克力餅乾",
+    "price": "265",
+    "note": ""
+  },
+  {
+    "ja": "お徳用 珍味詰め合せ",
+    "en": "Value Assorted Savory Snacks",
+    "ko": "실속형 진미 모둠",
+    "zh": "实惠装什锦风味零食",
+    "tw": "超值綜合珍味零食",
+    "price": "2160",
+    "note": "税込"
+  },
+  {
+    "ja": "龍角散ののどすっきり飴",
+    "en": "Ryukakusan Throat Lozenges",
+    "ko": "류카쿠산 목캔디",
+    "zh": "龙角散润喉糖",
+    "tw": "龍角散潤喉糖",
+    "price": "324",
+    "note": "税込"
+  }
+]
