@@ -4,7 +4,7 @@ import '@fontsource-variable/noto-sans-sc';
 import '@fontsource-variable/noto-sans-tc';
 import './style.css';
 import sample from './sample.json';
-import fixedLogo from './assets/hotel-logo.png';
+import tagTemplate from './assets/tag-template.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
 
 const $ = selector => document.querySelector(selector);
@@ -13,12 +13,12 @@ const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
 let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
-let settings = { width: 90, height: 55, pattern: false };
+let settings = { width: 90, height: 55 };
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
   if (saved?.products?.length) {
     products = saved.products;
-    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55, pattern: false };
+    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55 };
     activeId = products[0].id;
   }
 } catch { storageWarning = true; }
@@ -27,14 +27,14 @@ document.querySelector('#app').innerHTML = `
 <header class="topbar"><span class="header-title">プライスタグ作成</span><span class="local-badge"><i></i> データはこの端末に保存されます</span><button id="help" class="button ghost">使い方 <span>↗</span></button><button id="logout" class="button ghost" hidden>ログアウト</button></header>
 <main>
   <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1></div></section>
-  
+
   <div id="notice" class="notice" role="status" hidden></div>
   <div class="workspace">
     <section class="panel data-panel">
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
       <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button></div>
-      
+
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label><button id="add" class="button">+ 追加</button></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
@@ -45,7 +45,7 @@ document.querySelector('#app').innerHTML = `
       <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
       <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
         <label class="field">タグのサイズ<select id="size"><option value="90,55">90 × 55 mm · 1ページ8枚</option><option value="100,60">100 × 60 mm · 1ページ4枚</option><option value="180,110">180 × 110 mm · 1ページ2枚</option></select></label>
-        
+
         <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ &nbsp; 印刷・PDF保存</button><p class="print-hint">印刷画面で「PDFに保存」を選択してください。<br>背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。</p>
       </section>
       <p class="privacy-note">♧ &nbsp; Excelの読み込み・編集・印刷は端末内で処理します。<br>商品データを外部サービスに送信しません。</p>
@@ -69,7 +69,7 @@ function copies() { return products.filter(p => p.selected).reduce((sum, p) => s
 function perPage() { return Math.floor((190 + 4) / (settings.width + 4)) * Math.floor((277 + 4) / (settings.height + 4)); }
 function tag(product) {
   const error = validate(product);
-  return `<article class="tag" style="aspect-ratio:${settings.width}/${settings.height}"><div class="tag-content"><div class="hotel-brand"><img class="fixed-hotel-logo" src="${escape(fixedLogo)}" alt="NOBORIBETSU GRAND HOTEL"></div><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">入力内容を確認</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
+  return `<article class="tag" style="aspect-ratio:${settings.width}/${settings.height}"><img class="tag-background" src="${escape(tagTemplate)}" alt="" aria-hidden="true"><div class="tag-content"><div class="names"><div class="ja">${escape(product.ja)}</div>${['en','ko','zh','tw'].map(key => `<div class="translation" lang="${{en:'en',ko:'ko',zh:'zh-CN',tw:'zh-TW'}[key]}">${escape(product[key])}</div>`).join('')}</div><div class="tag-price">${error ? '<span class="invalid-price">入力内容を確認</span>' : `¥${parsePrice(product.price).toLocaleString('ja-JP')}`}</div>${product.note ? `<div class="tax">${escape(product.note)}</div>` : ''}</div></article>`;
 }
 function fitTags(root) {
   let valid = true;
