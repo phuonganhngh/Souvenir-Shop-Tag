@@ -29,7 +29,7 @@ try {
  assert.equal(await page.locator('#product-list .product-row').count(),14);
  assert.equal(await page.locator('#logo-input, #remove-logo, #hotel, #translate, #auto-translate').count(), 0);
  await page.locator('#preview .tag-background').evaluate(img => img.decode());
- assert.deepEqual(await page.locator('#preview .tag-background').evaluate(img => [img.naturalWidth,img.naturalHeight]),[1075,650]);
+ assert.deepEqual(await page.locator('#preview .tag-background').evaluate(img => [img.naturalWidth,img.naturalHeight]),[909,649]);
  assert.equal(await page.locator('#preview .fixed-hotel-logo').count(),0);
  assert.equal(await page.locator('#preview .tag-background').evaluate(img=>getComputedStyle(img).objectFit),'contain');
  assert.match(await page.locator('#print-count').textContent(),/14枚・A4 2ページ/);
@@ -77,7 +77,7 @@ try {
  await page.emulateMedia({media:'print'}); await page.evaluate(()=>document.fonts.ready);
  await page.pdf({path:`${dir}/tags.pdf`,preferCSSPageSize:true,printBackground:true});
  const sizes = await page.locator('#print-pages .tag').evaluateAll(els=>els.map(e=>({w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height,overflow:e.querySelector('.tag-content').scrollHeight-e.querySelector('.tag-content').clientHeight,name:e.querySelector('.ja').textContent})));
- assert.ok(Math.abs(sizes[0].w-90*96/25.4)<1);
+ assert.ok(Math.abs(sizes[0].w-77*96/25.4)<1);
  assert.ok(Math.abs(sizes[0].h-55*96/25.4)<1);
  assert.ok(sizes.every(size=>size.overflow<=1), JSON.stringify(sizes));
  console.log('Print measurements:',JSON.stringify(sizes));

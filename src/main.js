@@ -4,7 +4,7 @@ import '@fontsource-variable/noto-sans-sc';
 import '@fontsource-variable/noto-sans-tc';
 import './style.css';
 import sample from './sample.json';
-import tagTemplate from './assets/tag-template.png';
+import tagTemplate from './assets/souvenir-template.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
 
 const $ = selector => document.querySelector(selector);
@@ -13,12 +13,14 @@ const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
 let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
-let settings = { width: 90, height: 55 };
+let settings = { width: 77, height: 55 };
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
   if (saved?.products?.length) {
     products = saved.products;
-    settings = { width: saved.settings?.width || 90, height: saved.settings?.height || 55 };
+    const sizeMap = { '90,55':[77,55], '100,60':[91,65], '180,110':[154,110], '77,55':[77,55], '91,65':[91,65], '154,110':[154,110] };
+    const [width, height] = sizeMap[`${saved.settings?.width},${saved.settings?.height}`] || [77,55];
+    settings = { width, height };
     activeId = products[0].id;
   }
 } catch { storageWarning = true; }
@@ -44,7 +46,7 @@ document.querySelector('#app').innerHTML = `
     <aside class="preview-column">
       <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
       <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
-        <label class="field">タグのサイズ<select id="size"><option value="90,55">90 × 55 mm · 1ページ8枚</option><option value="100,60">100 × 60 mm · 1ページ4枚</option><option value="180,110">180 × 110 mm · 1ページ2枚</option></select></label>
+        <label class="field">タグのサイズ<select id="size"><option value="77,55">77 × 55 mm · 原寸 · 1ページ8枚</option><option value="91,65">91 × 65 mm · 1ページ8枚</option><option value="154,110">154 × 110 mm · 1ページ2枚</option></select></label>
 
         <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ &nbsp; 印刷・PDF保存</button><p class="print-hint">印刷画面で「PDFに保存」を選択してください。<br>背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。</p>
       </section>
