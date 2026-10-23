@@ -3,6 +3,7 @@ import '@fontsource-variable/noto-sans-kr';
 import '@fontsource-variable/noto-sans-sc';
 import '@fontsource-variable/noto-sans-tc';
 import './style.css';
+import { renderSelectedPreview } from './preview.js';
 import sample from './sample.json';
 import tagTemplate from './assets/souvenir-template.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
@@ -44,7 +45,7 @@ document.querySelector('#app').innerHTML = `
       <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></details>
     </section>
     <aside class="preview-column">
-      <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview"></div></div><div class="preview-caption"><span id="preview-name"></span><span id="size-caption"></span></div></section>
+      <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview" role="region" aria-label="選択した商品のプレビュー" tabindex="0"></div></div></section>
       <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
         <label class="field">タグのサイズ<select id="size"><option value="77,55">77 × 55 mm · 原寸 · 1ページ8枚</option><option value="91,65">91 × 65 mm · 1ページ8枚</option><option value="154,110">154 × 110 mm · 1ページ2枚</option></select></label>
 
@@ -87,10 +88,8 @@ function fitTags(root) {
   return valid;
 }
 function renderPreview() {
-  const product = active();
-  $('#preview').innerHTML = product ? tag(product) : '<p class="empty">商品を追加するとタグが表示されます。</p>';
-  $('#preview-name').textContent = product?.ja || '商品がありません';
-  $('#size-caption').textContent = `${settings.width} × ${settings.height} mm`;
+  renderSelectedPreview($('#preview'), products.filter(p => p.selected), activeId, tag,
+    `<article class="tag" style="aspect-ratio:${settings.width}/${settings.height}"><img class="tag-background" src="${escape(tagTemplate)}" alt="" aria-hidden="true"></article>`);
   const n = copies();
   $('#print-count').textContent = `${n}枚・A4 ${Math.ceil(n / perPage())}ページ`;
   $('#selected-summary').textContent = `${products.filter(p => p.selected).length}商品を選択・合計${n}枚`;
@@ -131,9 +130,9 @@ $('#product-list').addEventListener('change', e => {
   const row = e.target.closest('[data-id]');
   if (!row) return;
   const p = products.find(p => p.id === row.dataset.id);
-  if (e.target.dataset.action === 'select') p.selected = e.target.checked;
+  if (e.target.dataset.action === 'select') { p.selected = e.target.checked; if (p.selected) activeId = p.id; }
   if (e.target.dataset.action === 'quantity') p.quantity = Math.min(100, Math.max(1, Math.floor(Number(e.target.value) || 1)));
-  renderList(); save();
+  renderList(); renderEditor(); save();
 });
 $('#search').addEventListener('input', renderList);
 $('#select-all').addEventListener('change', e => { products.forEach(p => { p.selected = e.target.checked; }); refresh(); });

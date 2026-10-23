@@ -49,11 +49,9 @@ export function readMenuWorkbook(book) {
         try { return parseAllergen(get(row, header)); }
         catch (error) { throw new Error(`${sheet.name} ${number}行目・${header}：${error.message}`); }
       });
-      const status = normal(cellText(get(row, '確認状況')));
-      const confirmed = ['確認済み', '確認済', 'true', '1'].includes(status);
       const names = Object.fromEntries(nameFields.map((key, i) => [key, cellText(get(row, nameHeaders[i]))]));
       for (const text of Object.values(names)) if (text.length > 500) throw new Error(`${sheet.name} ${number}行目：料理名は各言語500文字以内で入力してください。`);
-      rows.push({ number: cellText(get(row, '番号')) || rows.length + 1, ...names, allergens: confirmed ? allergens.map(a => a === true) : allergens, confirmed });
+      rows.push({ number: cellText(get(row, '番号')) || rows.length + 1, ...names, allergens });
       if (++total > 2000) throw new Error('料理は合計2,000件まで取り込めます。');
     });
     result[sheet.name.trim()] = rows;
@@ -64,13 +62,13 @@ export function readMenuWorkbook(book) {
 export function writeMenuWorkbook(book, menus) {
   for (const [meal, rows] of Object.entries(menus)) {
     const sheet = book.addWorksheet(meal);
-    sheet.addRow(['番号', ...nameHeaders, ...allergenHeaders, '確認状況']);
-    rows.forEach((p, i) => sheet.addRow([p.number || i + 1, ...nameFields.map(key => p[key]), ...p.allergens.map(v => v === true ? '○' : v === false ? '－' : ''), p.confirmed ? '確認済み' : '未確認']));
+    sheet.addRow(['番号', ...nameHeaders, ...allergenHeaders]);
+    rows.forEach((p, i) => sheet.addRow([p.number || i + 1, ...nameFields.map(key => p[key]), ...p.allergens.map(v => v === true ? '○' : v === false ? '－' : '')]));
     sheet.columns.forEach((column, i) => { column.width = i === 0 ? 8 : i < 6 ? 32 : 12; });
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF927555' } };
     sheet.views = [{ state: 'frozen', xSplit: 2, ySplit: 1 }];
-    sheet.autoFilter = { from: 'A1', to: `R${Math.max(1, rows.length + 1)}` };
+    sheet.autoFilter = { from: 'A1', to: `Q${Math.max(1, rows.length + 1)}` };
     rows.forEach((p, i) => p.allergens.forEach((value, j) => {
       const cell = sheet.getCell(i + 2, j + 7);
       cell.alignment = { horizontal: 'center' };

@@ -18,3 +18,5 @@
 .tag-content{padding-top:13.6cqw;padding-bottom:14cqw}.names{margin-top:0}
 
 @media print{.print-page .tag::after{content:"";position:absolute;inset:0;border:.15mm dashed #c7c7bf;pointer-events:none}}
+
+#preview{display:flex;flex-direction:column;gap:16px;aspect-ratio:909/649;max-height:560px;overflow:auto;scrollbar-width:thin;overscroll-behavior:contain}.preview-item{width:100%;flex-shrink:0}.preview-stage{align-items:flex-start}

@@ -12,13 +12,12 @@ test('latest provided workbook preserves all 222 names and 456 allergy marks, in
   for (const [meal, rows] of Object.entries(data)) rows.forEach((p, i) => {
     nameFields.forEach((field, j) => assert.equal(p[field], book.getWorksheet(meal).getCell(i + 2, j + 2).value));
     p.allergens.forEach((value, j) => { assert.equal(value, book.getWorksheet(meal).getCell(i + 2, j + 7).value === '○' ? true : null); if (value) count++; });
-    assert.equal(p.confirmed, false);
   });
   assert.equal(count, 456);
   assert.deepEqual(data['夕食'].find(p => p.ja === 'パンナコッタ').allergens.flatMap((v, i) => v === true ? [allergenHeaders[i]] : []), ['乳製品', '豚肉']);
 });
-test('export and reimport preserve all eleven positions, unentered vs absent, names, and confirmation for both meals', async () => {
-  const original = { '朝食': [{ number: 7, ja: 'テスト', en: 'Eggs', ko: '달걀', zh: '鸡蛋', tw: '雞蛋', allergens: [true, false, null, true, null, false, true, null, false, true, true], confirmed: false }], '夕食': [{ number: 8, ja: '確認済み', en: '', ko: '', zh: '', tw: '', allergens: Array(11).fill(false), confirmed: true }] };
+test('export and reimport preserve all eleven positions, unentered vs absent, and names for both meals', async () => {
+  const original = { '朝食': [{ number: 7, ja: 'テスト', en: 'Eggs', ko: '달걀', zh: '鸡蛋', tw: '雞蛋', allergens: [true, false, null, true, null, false, true, null, false, true, true] }], '夕食': [{ number: 8, ja: '確認済み', en: '', ko: '', zh: '', tw: '', allergens: Array(11).fill(false) }] };
   const book = writeMenuWorkbook(new Excel.Workbook(), original), reloaded = new Excel.Workbook(); await reloaded.xlsx.load(await book.xlsx.writeBuffer());
   const result = readMenuWorkbook(reloaded);
   for (const meal of Object.keys(original)) { assert.deepEqual(result[meal][0], { ...original[meal][0], number: String(original[meal][0].number) }); }

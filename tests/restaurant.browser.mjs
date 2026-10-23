@@ -13,28 +13,26 @@ try {
  await page.goto(process.env.RESTAURANT_URL || 'http://127.0.0.1:5174/restaurant.html');
  await page.locator('.product-row').first().waitFor();
  assert.equal(await page.locator('.product-row').count(), 92);
- await page.locator('#preview .tag-background').evaluate(img => img.decode());
- assert.deepEqual(await page.locator('#preview .tag-background').evaluate(img => [img.naturalWidth, img.naturalHeight]), [909, 649]);
+ await page.locator('#preview .preview-current .tag-background').evaluate(img => img.decode());
+ assert.deepEqual(await page.locator('#preview .preview-current .tag-background').evaluate(img => [img.naturalWidth, img.naturalHeight]), [909, 649]);
  await page.getByRole('button', { name: 'パンナコッタ', exact: false }).click();
- assert.deepEqual(await page.locator('#preview .allergen-mark').evaluateAll(nodes => nodes.map(n => Number(n.dataset.allergen))), [3, 8]);
- assert.equal(await page.locator('#preview .dish-ja').textContent(), 'パンナコッタ');
- const alignment = await page.locator('#preview .tag').evaluate(tag => {
+ assert.deepEqual(await page.locator('#preview .preview-current .allergen-mark').evaluateAll(nodes => nodes.map(n => Number(n.dataset.allergen))), [3, 8]);
+ assert.equal(await page.locator('#preview .preview-current .dish-ja').textContent(), 'パンナコッタ');
+ const alignment = await page.locator('#preview .preview-current .tag').evaluate(tag => {
    const r = tag.getBoundingClientRect();
    return [...tag.querySelectorAll('.allergen-mark')].map(el => { const m = el.getBoundingClientRect(); return [(m.x + m.width / 2 - r.x) / r.width * 909, (m.y + m.height / 2 - r.y) / r.height * 649]; });
  });
  assert.ok(Math.abs(alignment[0][0] - 371.5) < 1); assert.ok(Math.abs(alignment[1][0] - 670) < 1); assert.ok(Math.abs(alignment[0][1] - 443) < 1);
- await page.locator('#print').click(); assert.match(await page.locator('#notice').textContent(), /未確認/);
- await page.locator('#confirmed').check();
- await page.locator('#edit-form [data-allergen="3"]').check(); // Already checked, does not change confirmation.
- assert.equal(await page.locator('#confirmed').isChecked(), true);
- await page.locator('#edit-form [data-allergen="0"]').check(); assert.equal(await page.locator('#confirmed').isChecked(), false);
- assert.deepEqual(await page.locator('#preview .allergen-mark').evaluateAll(nodes => nodes.map(n => Number(n.dataset.allergen))), [0, 3, 8]);
- await page.locator('#edit-form [data-allergen="0"]').uncheck(); await page.locator('#confirmed').check();
+ assert.equal(await page.locator('#confirmed, #confirm-selected, #preview-status, .row-status, .preview-caption, #allergy-summary').count(), 0);
+ assert.doesNotMatch(await page.locator('body').textContent(), /未確認|この料理のアレルギー表示を確認済み/);
+ await page.locator('#edit-form [data-allergen="0"]').check();
+ assert.deepEqual(await page.locator('#preview .preview-current .allergen-mark').evaluateAll(nodes => nodes.map(n => Number(n.dataset.allergen))), [0, 3, 8]);
+ await page.locator('#edit-form [data-allergen="0"]').uncheck();
  const downloadWait = page.waitForEvent('download'); await page.locator('#export').click(); const download = await downloadWait;
  const exported = new Excel.Workbook(); await exported.xlsx.readFile(await download.path());
  const parsed = readMenuWorkbook(exported); assert.equal(parsed['朝食'].length, 130); assert.equal(parsed['夕食'].length, 92);
- assert.equal(parsed['夕食'][7].confirmed, true); assert.deepEqual(parsed['夕食'][7].allergens.flatMap((v, i) => v ? [i] : []), [3, 8]);
- await page.reload(); await page.getByRole('button', { name: 'パンナコッタ', exact: false }).click(); assert.equal(await page.locator('#confirmed').isChecked(), true);
+ assert.equal(exported.getWorksheet('夕食').columnCount, 17); assert.deepEqual(parsed['夕食'][7].allergens.flatMap((v, i) => v ? [i] : []), [3, 8]);
+ await page.reload(); await page.getByRole('button', { name: 'パンナコッタ', exact: false }).click(); assert.deepEqual(await page.locator('#preview .preview-current .allergen-mark').evaluateAll(nodes => nodes.map(n => Number(n.dataset.allergen))), [3, 8]);
  const invalid = new Excel.Workbook(); invalid.addWorksheet('夕食').addRow(['日本語']); const invalidPath = `${dir}/invalid.xlsx`; await invalid.xlsx.writeFile(invalidPath);
  await page.locator('#excel-input').setInputFiles(invalidPath); await page.waitForFunction(() => document.querySelector('#notice').textContent.includes('列がありません'));
  assert.equal(await page.locator('.product-row').count(), 92);
@@ -44,7 +42,6 @@ try {
  for (const meal of ['夕食', '朝食']) {
   await page.locator(`[data-meal="${meal}"]`).click();
   assert.equal(await page.locator('.product-row').count(), expected[meal].length);
-  await page.locator('#confirm-selected').click();
   for (const size of ['77,55', '91,65', '154,110']) {
    await page.locator('#size').selectOption(size); const before = await page.evaluate(() => window.printCalled || 0);
    await page.locator('#print').click(); await page.waitForFunction(n => window.printCalled > n, before);
@@ -63,10 +60,10 @@ try {
   }
  }
  await page.locator('[data-meal="夕食"]').click(); await page.getByRole('button', { name: 'パンナコッタ', exact: false }).click();
- await page.locator('#preview .tag').screenshot({ path: `${dir}/panna-cotta.png` });
+ await page.locator('#preview .preview-current .tag').screenshot({ path: `${dir}/panna-cotta.png` });
  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(100);
  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
  await page.screenshot({ path: `${dir}/mobile.png`, fullPage: true });
  assert.deepEqual(errors, []);
- console.log('PASS: latest workbook, both meals, Panna Cotta marker positions, confirmation, edit/export/reimport/persistence, invalid input, all 222 print tags and 456 marks at all three sizes, no clipped names, mobile. Artifacts:', dir);
+ console.log('PASS: latest workbook, both meals, Panna Cotta marker positions, direct printing without confirmation, edit/export/reimport/persistence, invalid input, all 222 print tags and 456 marks at all three sizes, no clipped names, mobile. Artifacts:', dir);
 } finally { await browser.close(); }
