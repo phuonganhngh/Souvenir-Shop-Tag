@@ -15,6 +15,7 @@ const inputExamples = { ja: '茶碗蒸し', en: 'Chawanmushi (Steamed Egg Custar
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const storageKey = 'restaurant-tags-menu-20261022-72ec5f55';
+const sourceCountLabel = Object.entries(initialMenu).map(([name, items]) => `${name}${items.length}品`).join('・');
 const makeMenus = input => Object.fromEntries(Object.entries(input).map(([meal, rows]) => [meal, rows.map(p => ({ ...p, allergens: [...p.allergens], id: crypto.randomUUID(), selected: true, quantity: 1 }))]));
 let deletionHistory = {};
 let menus = makeMenus(initialMenu), meal = '夕食', activeId, editingId, settings = { width: 91, height: 65 }, storageWarning = false;
@@ -37,7 +38,7 @@ $('#app').innerHTML = `
 <div class="section-heading"><div><span class="section-number">01</span><h2>メニューとアレルギー</h2></div><span id="total" class="pill"></span></div>
 <div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「料理名・アレルギーを編集」で行えます。自動翻訳機能はありません。</p></div>
 <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon">↑</span><strong>メニューExcelを取り込む</strong><span>ドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・合計2,000品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
-<div class="upload-options"><a class="text-button" href="./downloads/Restaurant_Menu.xlsx" download>↓ 最新のメニューExcel</a><span>取り込みは現在の全メニューを置き換えます</span></div>
+<div class="upload-options"><a class="text-button" href="./downloads/Restaurant_Menu.xlsx" download>↓ 最新のメニューExcel</a><button id="restore-source" class="text-button" type="button">元メニュー（${sourceCountLabel}）を読み込む</button></div>
 <div class="meal-tabs" role="group" aria-label="メニューの区分" id="meal-tabs"></div>
 <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label></div>
 <div class="list-columns"><label><input type="checkbox" id="select-all" aria-label="この区分をすべて選択">料理</label><span>部数</span></div>
@@ -162,6 +163,13 @@ async function loadExcel(file) {
     notify(`${Object.values(menus).reduce((n, a) => n + a.length, 0)}品を取り込みました。アレルギー表示を確認してください。`);
   } catch (error) { notify(`取り込みできません：${error.message}`, true); }
 }
+$('#restore-source').addEventListener('click', () => {
+  if (!confirm(`現在の朝食・夕食のリストを元メニュー（${sourceCountLabel}）で置き換えます。追加・編集した内容を残す場合は、先にExcelに書き出してください。続けますか？`)) return;
+  deletionHistory = {}; editingId = undefined; menus = makeMenus(initialMenu);
+  if (!(meal in menus)) meal = Object.keys(menus)[0];
+  activeId = rows()[0]?.id; $('#search').value = ''; refresh();
+  notify(`元メニューを読み込みました。${sourceCountLabel}。`);
+});
 $('#excel-input').addEventListener('change', async e => { await loadExcel(e.target.files[0]); e.target.value = ''; });
 for (const event of ['dragover', 'dragleave', 'drop']) $('#drop-zone').addEventListener(event, e => { e.preventDefault(); $('#drop-zone').classList.toggle('dragging', event === 'dragover'); if (event === 'drop') loadExcel(e.dataTransfer.files[0]); });
 $('#export').addEventListener('click', async () => {
@@ -191,3 +199,8 @@ async function printTags() {
 $('#print').addEventListener('click', printTags);
 refresh(); new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview')); document.fonts.ready.then(() => fitTags($('#preview')));
 if (storageWarning) notify('端末への保存が制限されています。編集後はExcelに書き出してください。', true);
+
+if (!storageWarning && Object.entries(initialMenu).some(([name, items]) => menus[name]?.length !== items.length)) {
+  const currentCounts = Object.entries(menus).map(([name, items]) => `${name}${items.length}品`).join('・');
+  notify(`この端末に保存したメニュー（${currentCounts}）を表示しています。元メニューは${sourceCountLabel}です。「元メニューを読み込む」で元の一覧に戻せます。`);
+}

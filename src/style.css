@@ -32,3 +32,5 @@
 .editor #export{margin-top:18px;font-size:12px;white-space:normal}
 
 .export-hint{text-align:center}
+
+.upload-options{gap:12px;flex-wrap:wrap}

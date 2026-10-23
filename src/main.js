@@ -41,7 +41,7 @@ document.querySelector('#app').innerHTML = `
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
 <div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「商品を編集」で行えます。自動翻訳機能はありません。</p></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
-      <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button></div>
+      <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button><button id="restore-source" class="text-button" type="button">元リスト（${sample.length}商品）を読み込む</button></div>
 
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
@@ -189,6 +189,11 @@ async function loadExcel(file) {
     replaceProducts(readWorksheet(sheet));
   } catch { notify('Excelを読み込めません。パスワード保護やファイルの破損を確認し、.xlsx 形式で保存し直してください。', true); }
 }
+$('#restore-source').addEventListener('click', () => {
+  if (!confirm(`現在の${products.length}商品を元リストの${sample.length}商品で置き換えます。追加・編集した内容を残す場合は、先にExcelに書き出してください。続けますか？`)) return;
+  replaceProducts(sample);
+  notify(`元リストの${sample.length}商品を読み込みました。`);
+});
 $('#excel-input').addEventListener('change', async e => { await loadExcel(e.target.files[0]); e.target.value = ''; });
 for (const name of ['dragover','dragleave','drop']) $('#drop-zone').addEventListener(name, e => {
   e.preventDefault(); $('#drop-zone').classList.toggle('dragging', name === 'dragover');
@@ -234,6 +239,7 @@ refresh();
 new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview'));
 document.fonts.ready.then(() => fitTags($('#preview')));
 if (storageWarning) notify('このブラウザーではデータの保存が制限されています。画面を閉じる前にExcelに書き出してください。', true);
+else if (products.length !== sample.length) notify(`この端末に保存した${products.length}商品を表示しています。元リストは${sample.length}商品です。「元リスト（${sample.length}商品）を読み込む」で元の一覧に戻せます。`);
 
 if (!isPortable && location.protocol !== 'file:') {
   fetch('/api/session?status=1').then(response => response.json()).then(status => {

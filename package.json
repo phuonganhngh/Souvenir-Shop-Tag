@@ -16,7 +16,8 @@
     "test:restaurant": "node tests/restaurant.browser.mjs",
     "test:preview": "node tests/preview.browser.mjs",
     "test:deletion": "node tests/deletion.browser.mjs",
-    "test:editor": "node tests/editor.browser.mjs"
+    "test:editor": "node tests/editor.browser.mjs",
+    "test:source-counts": "node tests/source-counts.browser.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-jp": "^5.3.1",
