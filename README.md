@@ -12,7 +12,7 @@
 6. 編集後のリストは編集欄の「編集した商品リストをExcelに書き出す」から保存できます。元のExcelファイルは上書きしません。書き出したファイルにはすべての商品と編集済みの名称・価格・備考が含まれ、印刷部数や画面設定は含まれません。
 7. 共有端末では「ログアウト」で終了してください。
 
-「追加」から商品を手入力することもできます。商品名、翻訳、価格、商品のサイズ・種類、税表示は印刷前に確認してください。「税込」は価格に税が含まれることを確認した場合のみ入力してください。税表示が空欄の場合は自動で追加しません。
+「商品を編集」の「新規入力」から商品を手入力できます。編集欄は常に表示され、折りたたみはありません。商品リストとメニューの見出し直下に、Excelの一括追加と手入力の案内を表示します。翻訳はChatGPTとGeminiで相互に照合する手順を案内しています。商品名、翻訳、価格、商品のサイズ・種類、税表示は印刷前に確認してください。「税込」は価格に税が含まれることを確認した場合のみ入力してください。税表示が空欄の場合は自動で追加しません。
 
 タグのサイズは77×55 mm（原寸・1ページ8枚）、91×65 mm（1ページ8枚）、154×110 mm（1ページ2枚）です。A4用紙の余白は10 mm、タグ間の裁断用スペースは4 mmです。長すぎる商品名・備考は、プレビューで確認して調整してください。
 
@@ -31,7 +31,7 @@
 
 ## Web版の公開（Vercel）
 
-1. VercelにGitHubアカウントでログインし、「Add New → Project」から `phuonganhngh/Souvenir-Shop-Tag` を取り込みます。
+1. VercelにGitHubアカウントでログインし、「Add New → Project」から `phuonganhngh/Tag` を取り込みます。
 2. Application Presetは**Vite**、Root Directoryは既定値、Node.jsは**24**、Build Commandは `npm run build`、Output Directoryは `dist` です。
 3. 「Environment Variables」に**`APP_PASSWORD`だけ**を登録します。値は8文字以上の推測されにくいパスワードにしてください。Vercelの設定画面で直接入力し、コード・HTML・GitHub・チャットには貼り付けないでください。
 4. 「Deploy」を押し、完了後に「Visit」で開きます。発行されたHTTPS URLとパスワードを利用者に案内してください。
@@ -47,7 +47,7 @@ GitHubをPublicにする操作とWebサイトの公開は別です。このプ�
 
 ## レストラン料理タグ
 
-[料理タグのWebページ](https://phuonganhngh.github.io/Souvenir-Shop-Tag/restaurant.html) は売店用と別のHTMLです。両ページ共通のヘッダー「販売タグ」「料理タグ」で移動できます。販売用のHTMLは `shop.html`、料理用は `restaurant.html` です。`index.html` は従来のURL用として販売用画面を表示します。画面は日本語です。
+[料理タグのWebページ](https://phuonganhngh.github.io/Tag/restaurant.html) は売店用と別のHTMLです。両ページ共通のヘッダー「販売タグ」「料理タグ」で移動できます。販売用のHTMLは `shop.html`、料理用は `restaurant.html` です。`index.html` は従来のURL用として販売用画面を表示します。画面は日本語です。
 
 - 最新の提供ファイル `public/downloads/Restaurant_Menu.xlsx` を採用しています。朝食130品、夕食92品、全456か所の○を保持し、旧版の公開Excel・ZIPは削除しています。
 - 「朝食」「夕食」を切り替え、料理の選択・部数設定・5言語の名称と11項目の編集ができます。Excelの取り込みは全区分を置き換え、書き出しは両区分を含みます。元のExcelは上書きしません。

@@ -28,7 +28,7 @@ try {
 } catch { storageWarning = true; }
 
 document.querySelector('#app').innerHTML = `
-<header class="topbar tag-header">${tagNavigation('shop')}<button id="help" class="button ghost">使い方 ↗</button><button id="logout" class="button ghost" hidden>ログアウト</button></header>
+<header class="topbar tag-header">${tagNavigation('shop')}<button id="logout" class="button ghost" hidden>ログアウト</button></header>
 <main>
   <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1></div></section>
 
@@ -36,14 +36,15 @@ document.querySelector('#app').innerHTML = `
   <div class="workspace">
     <section class="panel data-panel">
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
+<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「商品を編集」で行えます。</p></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
       <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button></div>
 
-      <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label><button id="add" class="button">+ 追加</button></div>
+      <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
       <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の商品を削除</button></div>
-      <details class="editor" open><summary>商品を編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></details>
+      <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">商品を編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></section>
     </section>
     <aside class="preview-column">
       <section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div><span class="live"><i></i> 編集中</span></div><div class="preview-stage"><div id="preview" role="region" aria-label="選択した商品のプレビュー" tabindex="0"></div></div></section>
@@ -57,7 +58,7 @@ document.querySelector('#app').innerHTML = `
   </div>
   <footer><span>登別グランドホテル</span></footer>
 </main><div id="print-pages" aria-hidden="true"></div>
-<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><p class="eyebrow">かんたん3ステップ</p><h2>商品リストからプライスタグを作成</h2><ol><li><strong>商品を入力。</strong>日本語・英語・韓国語・簡体字・繁体字の商品名と価格を入力済みの .xlsx ファイルを取り込むか、「追加」から入力します。Excel の見出しはテンプレートに合わせてください。取り込むシートを選択できます。</li><li><strong>内容を確認。</strong>商品名をクリックすると編集できます。印刷対象にチェックを入れ、部数を指定してください。印刷前に価格、翻訳、税表示を確認してください。</li><li><strong>印刷・PDF保存。</strong>A4・縦向き・倍率100%で、背景のグラフィックを有効、ヘッダーとフッターを無効にしてください。ページ分割と裁断用の枠線は自動で設定されます。</li></ol><p>「税込」は、価格に税が含まれることを確認した場合のみ入力してください。ホテルのロゴはすべてのタグに固定で表示されます。</p><p>翻訳はExcelに入力済みの内容を使用します。空欄は自動補完しません。必要な言語の商品名を入力してから印刷してください。</p><p>データはこのブラウザーに自動保存されます。別の端末では Excel を取り込んでください。必要なリストは、保存データを削除する前に Excel に書き出してください。</p></dialog>`;
+`;
 
 function notify(message, error = false) {
   $('#notice').textContent = message;
@@ -137,7 +138,7 @@ $('#product-list').addEventListener('change', e => {
 });
 $('#search').addEventListener('input', renderList);
 $('#select-all').addEventListener('change', e => { products.forEach(p => { p.selected = e.target.checked; }); refresh(); });
-$('#add').addEventListener('click', () => {
+$('#new-entry').addEventListener('click', () => {
   if (products.length >= 2000) return notify('商品は最大2,000件まで登録できます。', true);
   const p = makeProducts([Object.fromEntries(fields.map(f => [f, '']))])[0];
   products.unshift(p); activeId = p.id; $('#search').value = ''; refresh();
@@ -209,8 +210,6 @@ async function printTags() {
   window.print();
 }
 $('#print').addEventListener('click', printTags);
-$('#help').addEventListener('click', () => $('#guide').showModal());
-$('#close-guide').addEventListener('click', () => $('#guide').close());
 refresh();
 new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview'));
 document.fonts.ready.then(() => fitTags($('#preview')));

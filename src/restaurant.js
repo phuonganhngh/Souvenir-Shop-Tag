@@ -26,21 +26,22 @@ try {
 activeId = menus[meal]?.[0]?.id;
 document.body.classList.add('restaurant-app');
 $('#app').innerHTML = `
-<header class="topbar tag-header">${tagNavigation('restaurant')}<button id="help" class="button ghost">使い方 ↗</button></header>
+<header class="topbar tag-header">${tagNavigation('restaurant')}</header>
 <main><section class="heading"><div><p class="eyebrow">レストラン用・アレルギー表示</p><h1>料理タグを、かんたんに。</h1><p>朝食・夕食のメニューから、5言語の料理名と11項目のアレルギー表示をまとめて印刷。</p></div></section>
 <div id="notice" class="notice" role="status" hidden></div>
 <div class="workspace"><section class="panel data-panel">
 <div class="section-heading"><div><span class="section-number">01</span><h2>メニューとアレルギー</h2></div><span id="total" class="pill"></span></div>
+<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「料理名・アレルギーを編集」で行えます。</p></div>
 <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon">↑</span><strong>メニューExcelを取り込む</strong><span>ドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・合計2,000品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
 <div class="upload-options"><a class="text-button" href="./downloads/Restaurant_Menu.xlsx" download>↓ 最新のメニューExcel</a><span>取り込みは現在の全メニューを置き換えます</span></div>
 <div class="meal-tabs" role="group" aria-label="メニューの区分" id="meal-tabs"></div>
-<div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label><button id="add" class="button">+ 追加</button></div>
+<div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label></div>
 <div class="list-columns"><label><input type="checkbox" id="select-all" aria-label="この区分をすべて選択">料理</label><span>部数</span></div>
 <div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の料理を削除</button></div>
-<details class="editor" open><summary>料理名・アレルギーを編集 <span>＋</span></summary><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
+<section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
 <fieldset class="allergen-editor"><legend>含まれる項目にチェック</legend>${allergenHeaders.map((label, i) => `<label><input type="checkbox" name="allergen-${i}" data-allergen="${i}">${label}</label>`).join('')}</fieldset>
 <p class="form-hint">アレルギー表示はExcelの内容を使用します。料理名から推測しません。</p></form>
-<button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button></details>
+<button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button></section>
 </section>
 <aside class="preview-column"><section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div></div><div class="preview-stage"><div id="preview" role="region" aria-label="選択した料理のプレビュー" tabindex="0"></div></div></section>
 <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
@@ -49,7 +50,7 @@ $('#app').innerHTML = `
 <div class="print-summary"><span id="print-count"></span><small>A4・縦向き・倍率100%</small></div><button id="print" class="button primary full">▣ 印刷・PDF保存</button><p class="print-hint">ヘッダー・フッターは無効、倍率は100%にします。</p></section>
 <p class="privacy-note">Excelの取り込み・編集・印刷は端末内で処理します。<br>売店タグとは別に、このブラウザーに自動保存されます。</p></aside></div>
 <footer>登別グランドホテル</footer></main><div id="print-pages" aria-hidden="true"></div>
-<dialog id="guide"><button id="close-guide" class="button close" aria-label="閉じる">×</button><h2>料理タグの使い方</h2><ol><li>「朝食」「夕食」を切り替えて料理を選びます。Excelで更新する場合は同じ名前のシートと見出しを使用してください。</li><li>料理名と11項目を確認します。○・〇・●・✓・1は該当、－・×・0は非該当、空欄はそのまま取り込みます。翻訳はExcelの内容をそのまま使用します。</li><li>表示中の区分で選択したタグを印刷します。該当項目は赤い四角で表示します。A4・縦向き・倍率100%で印刷してください。</li><li>「Excelに書き出す」で両方の区分の編集内容を保存できます。空欄・非該当の状態も保存します。</li></ol><p>最新のメニューは222品です。表示は今回提供されたExcelから取り込み、旧版のデータは引き継いでいません。</p><p>元のファイルや他の端末には自動反映されません。共有前にExcelを書き出してください。</p></dialog>`;
+`;
 function notify(text, error = false) { $('#notice').textContent = text; $('#notice').classList.toggle('error', error); $('#notice').hidden = false; }
 function save() {
   try { localStorage.setItem(storageKey, JSON.stringify({ menus, meal, settings })); }
@@ -116,7 +117,7 @@ $('#edit-form').addEventListener('input', e => {
   else if (e.target.dataset.allergen !== undefined) p.allergens[Number(e.target.dataset.allergen)] = e.target.checked;
   renderList(); save();
 });
-$('#add').addEventListener('click', () => {
+$('#new-entry').addEventListener('click', () => {
   if (Object.values(menus).reduce((n, a) => n + a.length, 0) >= 2000) return notify('料理は合計2,000品まで登録できます。', true);
   const p = makeMenus({ [meal]: [{ ...Object.fromEntries(nameFields.map(k => [k, ''])), allergens: Array(11).fill(null) }] })[meal][0];
   rows().unshift(p); activeId = p.id; $('#search').value = ''; refresh(); $('#edit-form').elements.namedItem('ja').focus();
@@ -166,6 +167,5 @@ async function printTags() {
   window.print();
 }
 $('#print').addEventListener('click', printTags);
-$('#help').addEventListener('click', () => $('#guide').showModal()); $('#close-guide').addEventListener('click', () => $('#guide').close());
 refresh(); new ResizeObserver(() => fitTags($('#preview'))).observe($('#preview')); document.fonts.ready.then(() => fitTags($('#preview')));
 if (storageWarning) notify('端末への保存が制限されています。編集後はExcelに書き出してください。', true);

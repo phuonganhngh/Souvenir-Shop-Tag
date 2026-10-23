@@ -12,6 +12,11 @@ try {
   assert.deepEqual(await page.locator('.tag-nav a').evaluateAll(links => links.map(link => link.getAttribute('href'))), ['./shop.html', './restaurant.html']);
   assert.equal(await page.locator('.tag-nav [aria-current="page"]').textContent(), path === 'restaurant.html' ? '料理タグ' : '販売タグ');
   assert.equal(await page.locator('.topbar .header-title, .topbar .local-badge').count(), 0);
+  assert.equal(await page.locator('#help, #guide, #add, details.editor, .editor summary').count(), 0);
+  assert.match(await page.locator('.list-instructions').textContent(), /ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合/);
+  assert.match(await page.locator('.list-instructions').textContent(), /手入力での追加・編集/);
+  await page.locator('#editor-title').click();
+  assert.equal(await page.locator('#edit-form').isVisible(), true);
   const list = page.locator('#product-list .product-row');
   const firstName = await list.nth(0).locator('.product-name strong').textContent();
   const secondName = await list.nth(1).locator('.product-name strong').textContent();
@@ -50,6 +55,11 @@ try {
   assert.equal(await page.locator(`#preview ${namesSelector}`).count(), 0);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  const originalCount = await list.count();
+  await page.locator('#new-entry').click();
+  assert.equal(await list.count(), originalCount + 1);
+  await page.locator('#edit-form [name="ja"]').fill('手入力の新しい商品');
+  assert.deepEqual(await page.locator(`#preview ${namesSelector}`).allTextContents(), ['手入力の新しい商品']);
   await page.locator('.tag-nav a').filter({ hasText: path === 'restaurant.html' ? '販売タグ' : '料理タグ' }).click();
   await page.waitForURL(`**/${path === 'restaurant.html' ? 'shop.html' : 'restaurant.html'}`);
   assert.equal(await page.locator('.tag-nav a').count(), 2);

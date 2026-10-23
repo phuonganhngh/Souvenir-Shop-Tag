@@ -23,9 +23,8 @@ try {
  assert.equal(await page.locator('html').getAttribute('lang'), 'ja');
  assert.equal(await page.locator('.brand, .brand-icon').count(), 0);
  assert.doesNotMatch(await page.locator('body').textContent(), /Tag\s*Studio|TAG\s*STUDIO|[\u1ea0-\u1ef9đĐ]/u);
- await page.getByRole('button', {name:'使い方'}).click();
- assert.match(await page.locator('#guide').textContent(), /かんたん3ステップ/);
- await page.getByRole('button', {name:'閉じる', exact:true}).click();
+ assert.equal(await page.locator('#help, #guide, #add, details.editor, .editor summary').count(),0);
+ assert.match(await page.locator('.list-instructions').textContent(), /ChatGPT.*Gemini/);
  assert.equal(await page.locator('#product-list .product-row').count(),14);
  assert.equal(await page.locator('#logo-input, #remove-logo, #hotel, #translate, #auto-translate').count(), 0);
  await page.locator('#preview .preview-current .tag-background').evaluate(img => img.decode());
