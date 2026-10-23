@@ -30,3 +30,5 @@
 .form-grid input::placeholder{color:#a5aaa2;opacity:1;font-weight:400}
 
 .editor #export{margin-top:18px;font-size:12px;white-space:normal}
+
+.export-hint{text-align:center}
