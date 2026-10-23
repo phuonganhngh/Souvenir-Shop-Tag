@@ -40,7 +40,7 @@ $('#app').innerHTML = `
 <div class="meal-tabs" role="group" aria-label="メニューの区分" id="meal-tabs"></div>
 <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label></div>
 <div class="list-columns"><label><input type="checkbox" id="select-all" aria-label="この区分をすべて選択">料理</label><span>部数</span></div>
-<div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した料理を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す（Undo）</button></div></div>
+<div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した料理を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す</button></div></div>
 <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
 <fieldset class="allergen-editor"><legend>含まれる項目にチェック</legend>${allergenHeaders.map((label, i) => `<label><input type="checkbox" name="allergen-${i}" data-allergen="${i}">${label}</label>`).join('')}</fieldset>
 </form>
@@ -128,11 +128,11 @@ $('#new-entry').addEventListener('click', () => {
 });
 $('#delete').addEventListener('click', () => {
   const count = selected().length;
-  if (!count || !confirm(`${meal}の選択した${count}品を削除しますか？削除後は「元に戻す（Undo）」で復元できます。`)) return;
+  if (!count || !confirm(`${meal}の選択した${count}品を削除しますか？削除後は「元に戻す」で復元できます。`)) return;
   const result = deleteSelected(rows());
   (deletionHistory[meal] ||= []).push(result.action); menus[meal] = result.rows;
   if (!active()) activeId = rows()[0]?.id;
-  refresh(); notify(`${meal}の${count}品を削除しました。「元に戻す（Undo）」で復元できます。`);
+  refresh(); notify(`${meal}の${count}品を削除しました。「元に戻す」で復元できます。`);
 });
 $('#undo').addEventListener('click', () => {
   const action = deletionHistory[meal]?.pop(); if (!action) return;

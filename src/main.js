@@ -45,7 +45,7 @@ document.querySelector('#app').innerHTML = `
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
-      <div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した商品を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す（Undo）</button></div></div>
+      <div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した商品を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す</button></div></div>
       <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">商品を編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></section>
     </section>
     <aside class="preview-column">
@@ -149,11 +149,11 @@ $('#new-entry').addEventListener('click', () => {
 });
 $('#delete').addEventListener('click', () => {
   const count = products.filter(p => p.selected).length;
-  if (!count || !confirm(`選択した${count}商品を削除しますか？削除後は「元に戻す（Undo）」で復元できます。`)) return;
+  if (!count || !confirm(`選択した${count}商品を削除しますか？削除後は「元に戻す」で復元できます。`)) return;
   const result = deleteSelected(products);
   deletionHistory.push(result.action); products = result.rows;
   if (!active()) activeId = products[0]?.id;
-  refresh(); notify(`${count}商品を削除しました。「元に戻す（Undo）」で復元できます。`);
+  refresh(); notify(`${count}商品を削除しました。「元に戻す」で復元できます。`);
 });
 $('#undo').addEventListener('click', () => {
   const action = deletionHistory.pop(); if (!action) return;
