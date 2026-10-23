@@ -11,6 +11,7 @@ import template from './assets/restaurant-template.png';
 import initialMenu from './restaurant-menu.json';
 import { nameFields, nameHeaders, allergenHeaders, readMenuWorkbook, writeMenuWorkbook } from './restaurant-data.js';
 
+const inputExamples = { ja: '茶碗蒸し', en: 'Chawanmushi (Steamed Egg Custard)', ko: '일본식 계란찜', zh: '日式茶碗蒸', tw: '日式茶碗蒸' };
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const storageKey = 'restaurant-tags-menu-20261022-72ec5f55';
@@ -41,7 +42,7 @@ $('#app').innerHTML = `
 <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label></div>
 <div class="list-columns"><label><input type="checkbox" id="select-all" aria-label="この区分をすべて選択">料理</label><span>部数</span></div>
 <div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した料理を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す</button></div></div>
-<section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
+<section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500" placeholder="例：${escape(inputExamples[key])}"></label>`).join('')}</div>
 <fieldset class="allergen-editor"><legend>含まれる項目にチェック</legend>${allergenHeaders.map((label, i) => `<label><input type="checkbox" name="allergen-${i}" data-allergen="${i}">${label}</label>`).join('')}</fieldset>
 </form>
 <button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button><p class="form-hint">追加・編集した内容を保存するには、新しいExcelファイルとして書き出してください。</p></section>
