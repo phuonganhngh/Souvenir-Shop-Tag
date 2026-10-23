@@ -2,11 +2,16 @@ import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
 try {
- for (const [path, namesSelector] of [['index.html', '.ja'], ['restaurant.html', '.dish-ja']]) {
+ for (const [path, namesSelector] of [['index.html', '.ja'], ['shop.html', '.ja'], ['restaurant.html', '.dish-ja']]) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${process.env.PREVIEW_BASE_URL || 'http://127.0.0.1:5174/'}${path}`);
   await page.locator('.product-row').first().waitFor();
+  assert.equal(await page.locator('.tag-nav a').count(), 2);
+  assert.deepEqual(await page.locator('.tag-nav a').allTextContents(), ['販売タグ', '料理タグ']);
+  assert.deepEqual(await page.locator('.tag-nav a').evaluateAll(links => links.map(link => link.getAttribute('href'))), ['./shop.html', './restaurant.html']);
+  assert.equal(await page.locator('.tag-nav [aria-current="page"]').textContent(), path === 'restaurant.html' ? '料理タグ' : '販売タグ');
+  assert.equal(await page.locator('.topbar .header-title, .topbar .local-badge').count(), 0);
   const list = page.locator('#product-list .product-row');
   const firstName = await list.nth(0).locator('.product-name strong').textContent();
   const secondName = await list.nth(1).locator('.product-name strong').textContent();
@@ -45,6 +50,9 @@ try {
   assert.equal(await page.locator(`#preview ${namesSelector}`).count(), 0);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  await page.locator('.tag-nav a').filter({ hasText: path === 'restaurant.html' ? '販売タグ' : '料理タグ' }).click();
+  await page.waitForURL(`**/${path === 'restaurant.html' ? 'shop.html' : 'restaurant.html'}`);
+  assert.equal(await page.locator('.tag-nav a').count(), 2);
   assert.deepEqual(errors, []); await page.close();
   console.log(`PASS ${path}: selected-only previews, scroll to new selection, blank when none, live edits, persistence, search, no captions, mobile`);
  }

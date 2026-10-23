@@ -47,7 +47,7 @@ GitHubをPublicにする操作とWebサイトの公開は別です。このプ�
 
 ## レストラン料理タグ
 
-[料理タグのWebページ](https://phuonganhngh.github.io/Souvenir-Shop-Tag/restaurant.html) は売店用と別のHTMLです。ヘッダーの「料理タグ」「売店タグ」で移動できます。画面は日本語です。
+[料理タグのWebページ](https://phuonganhngh.github.io/Souvenir-Shop-Tag/restaurant.html) は売店用と別のHTMLです。両ページ共通のヘッダー「販売タグ」「料理タグ」で移動できます。販売用のHTMLは `shop.html`、料理用は `restaurant.html` です。`index.html` は従来のURL用として販売用画面を表示します。画面は日本語です。
 
 - 最新の提供ファイル `public/downloads/Restaurant_Menu.xlsx` を採用しています。朝食130品、夕食92品、全456か所の○を保持し、旧版の公開Excel・ZIPは削除しています。
 - 「朝食」「夕食」を切り替え、料理の選択・部数設定・5言語の名称と11項目の編集ができます。Excelの取り込みは全区分を置き換え、書き出しは両区分を含みます。元のExcelは上書きしません。

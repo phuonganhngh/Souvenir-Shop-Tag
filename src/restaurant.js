@@ -5,6 +5,7 @@ import '@fontsource-variable/noto-sans-tc';
 import './style.css';
 import './restaurant.css';
 import { renderSelectedPreview } from './preview.js';
+import { tagNavigation } from './navigation.js';
 import template from './assets/restaurant-template.png';
 import initialMenu from './restaurant-menu.json';
 import { nameFields, nameHeaders, allergenHeaders, readMenuWorkbook, writeMenuWorkbook } from './restaurant-data.js';
@@ -25,7 +26,7 @@ try {
 activeId = menus[meal]?.[0]?.id;
 document.body.classList.add('restaurant-app');
 $('#app').innerHTML = `
-<header class="topbar"><span class="header-title">レストラン料理タグ</span><nav aria-label="タグ作成ページ"><a class="button ghost" href="./index.html">売店タグ</a><a class="button ghost current" href="./restaurant.html" aria-current="page">料理タグ</a></nav><button id="help" class="button ghost">使い方 ↗</button></header>
+<header class="topbar tag-header">${tagNavigation('restaurant')}<button id="help" class="button ghost">使い方 ↗</button></header>
 <main><section class="heading"><div><p class="eyebrow">レストラン用・アレルギー表示</p><h1>料理タグを、かんたんに。</h1><p>朝食・夕食のメニューから、5言語の料理名と11項目のアレルギー表示をまとめて印刷。</p></div></section>
 <div id="notice" class="notice" role="status" hidden></div>
 <div class="workspace"><section class="panel data-panel">

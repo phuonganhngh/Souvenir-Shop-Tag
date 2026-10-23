@@ -4,6 +4,7 @@ import '@fontsource-variable/noto-sans-sc';
 import '@fontsource-variable/noto-sans-tc';
 import './style.css';
 import { renderSelectedPreview } from './preview.js';
+import { tagNavigation } from './navigation.js';
 import sample from './sample.json';
 import tagTemplate from './assets/souvenir-template.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
@@ -27,7 +28,7 @@ try {
 } catch { storageWarning = true; }
 
 document.querySelector('#app').innerHTML = `
-<header class="topbar"><span class="header-title">プライスタグ作成</span><span class="local-badge"><i></i> データはこの端末に保存されます</span><a class="button ghost" href="./restaurant.html">料理タグ ↗</a><button id="help" class="button ghost">使い方 <span>↗</span></button><button id="logout" class="button ghost" hidden>ログアウト</button></header>
+<header class="topbar tag-header">${tagNavigation('shop')}<button id="help" class="button ghost">使い方 ↗</button><button id="logout" class="button ghost" hidden>ログアウト</button></header>
 <main>
   <section class="heading"><div><p class="eyebrow">売店用プライスタグ</p><h1>プライスタグを、<br class="mobile-break">かんたんに。</h1></div></section>
 
