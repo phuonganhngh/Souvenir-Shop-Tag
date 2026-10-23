@@ -17,7 +17,7 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&a
 const storageKey = 'restaurant-tags-menu-20261022-72ec5f55';
 const makeMenus = input => Object.fromEntries(Object.entries(input).map(([meal, rows]) => [meal, rows.map(p => ({ ...p, allergens: [...p.allergens], id: crypto.randomUUID(), selected: true, quantity: 1 }))]));
 let deletionHistory = {};
-let menus = makeMenus(initialMenu), meal = '夕食', activeId, settings = { width: 91, height: 65 }, storageWarning = false;
+let menus = makeMenus(initialMenu), meal = '夕食', activeId, editingId, settings = { width: 91, height: 65 }, storageWarning = false;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey));
   if (saved?.menus && Object.values(saved.menus).every(rows => Array.isArray(rows) && rows.every(p => typeof p.ja === 'string' && p.allergens?.length === 11 && p.allergens.every(v => v === null || typeof v === 'boolean') && typeof p.id === 'string' && Number.isInteger(p.quantity) && p.quantity >= 1 && p.quantity <= 100))) {
@@ -62,6 +62,7 @@ function save() {
 }
 const rows = () => menus[meal] || [];
 const active = () => rows().find(p => p.id === activeId);
+const editing = () => rows().find(p => p.id === editingId);
 const selected = () => rows().filter(p => p.selected);
 const copies = () => selected().reduce((n, p) => n + p.quantity, 0);
 const perPage = () => Math.floor(194 / (settings.width + 4)) * Math.floor(281 / (settings.height + 4));
@@ -97,35 +98,41 @@ function renderList() {
   renderPreview();
 }
 function renderEditor() {
-  const p = active();
-  nameFields.forEach(key => { const input = $('#edit-form').elements.namedItem(key); input.value = p?.[key] || ''; input.disabled = !p; });
-  $('#edit-form').querySelectorAll('[data-allergen]').forEach(input => { input.checked = p?.allergens[Number(input.dataset.allergen)] === true; input.disabled = !p; });
+  const p = editing();
+  nameFields.forEach(key => { const input = $('#edit-form').elements.namedItem(key); input.value = p?.[key] || ''; input.disabled = false; });
+  $('#edit-form').querySelectorAll('[data-allergen]').forEach(input => { input.checked = p?.allergens[Number(input.dataset.allergen)] === true; input.disabled = false; });
 }
 function refresh() { renderList(); renderEditor(); save(); }
 $('#meal-tabs').addEventListener('click', e => {
   const button = e.target.closest('[data-meal]'); if (!button) return;
-  meal = button.dataset.meal; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
+  meal = button.dataset.meal; editingId = undefined; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
 });
 $('#search').addEventListener('input', renderList);
-$('#select-all').addEventListener('change', e => { rows().forEach(p => p.selected = e.target.checked); refresh(); });
-$('#product-list').addEventListener('click', e => { const button = e.target.closest('[data-action="edit"]'); if (button) { activeId = button.closest('[data-id]').dataset.id; renderList(); renderEditor(); } });
+$('#select-all').addEventListener('change', e => { editingId = undefined; rows().forEach(p => p.selected = e.target.checked); refresh(); });
+$('#product-list').addEventListener('click', e => { const button = e.target.closest('[data-action="edit"]'); if (button) { activeId = editingId = button.closest('[data-id]').dataset.id; renderList(); renderEditor(); } });
 $('#product-list').addEventListener('change', e => {
   const p = rows().find(p => p.id === e.target.closest('[data-id]')?.dataset.id); if (!p) return;
-  if (e.target.dataset.action === 'select') { p.selected = e.target.checked; if (p.selected) activeId = p.id; }
+  if (e.target.dataset.action === 'select') { p.selected = e.target.checked; editingId = undefined; if (p.selected) activeId = p.id; }
   if (e.target.dataset.action === 'quantity') p.quantity = Math.max(1, Math.min(100, Math.floor(Number(e.target.value) || 1)));
   renderList(); renderEditor(); save();
 });
 $('#edit-form').addEventListener('submit', e => e.preventDefault());
 $('#edit-form').addEventListener('input', e => {
-  const p = active(); if (!p) return;
+  if (!nameFields.includes(e.target.name) && e.target.dataset.allergen === undefined) return;
+  const p = editing() || createEntry(); if (!p) return;
   if (nameFields.includes(e.target.name)) p[e.target.name] = e.target.value;
   else if (e.target.dataset.allergen !== undefined) p.allergens[Number(e.target.dataset.allergen)] = e.target.checked;
   renderList(); save();
 });
-$('#new-entry').addEventListener('click', () => {
-  if (Object.values(menus).reduce((n, a) => n + a.length, 0) >= 2000) return notify('料理は合計2,000品まで登録できます。', true);
+function createEntry() {
+  if (Object.values(menus).reduce((n, a) => n + a.length, 0) >= 2000) { notify('料理は合計2,000品まで登録できます。', true); return null; }
   const p = makeMenus({ [meal]: [{ ...Object.fromEntries(nameFields.map(k => [k, ''])), allergens: Array(11).fill(null) }] })[meal][0];
-  rows().unshift(p); activeId = p.id; $('#search').value = ''; refresh(); $('#edit-form').elements.namedItem('ja').focus();
+  rows().unshift(p); activeId = editingId = p.id; $('#search').value = '';
+  return p;
+}
+$('#new-entry').addEventListener('click', () => {
+  if (!createEntry()) return;
+  refresh(); $('#edit-form').elements.namedItem('ja').focus();
 });
 $('#delete').addEventListener('click', () => {
   const count = selected().length;
@@ -133,6 +140,7 @@ $('#delete').addEventListener('click', () => {
   const result = deleteSelected(rows());
   (deletionHistory[meal] ||= []).push(result.action); menus[meal] = result.rows;
   if (!active()) activeId = rows()[0]?.id;
+  if (!editing()) editingId = undefined;
   refresh(); notify(`${meal}の${count}品を削除しました。「元に戻す」で復元できます。`);
 });
 $('#undo').addEventListener('click', () => {
@@ -150,7 +158,7 @@ async function loadExcel(file) {
     const Excel = await excel(), book = new Excel.Workbook(); await book.xlsx.load(await file.arrayBuffer());
     const next = readMenuWorkbook(book);
     if (!confirm('取り込むExcelで朝食・夕食のリスト全体を置き換えます。未保存の編集内容は失われます。続けますか？')) return notify('取り込みをキャンセルしました。');
-    deletionHistory = {}; menus = makeMenus(next); meal = meal in menus ? meal : Object.keys(menus)[0]; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
+    deletionHistory = {}; editingId = undefined; menus = makeMenus(next); meal = meal in menus ? meal : Object.keys(menus)[0]; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
     notify(`${Object.values(menus).reduce((n, a) => n + a.length, 0)}品を取り込みました。アレルギー表示を確認してください。`);
   } catch (error) { notify(`取り込みできません：${error.message}`, true); }
 }

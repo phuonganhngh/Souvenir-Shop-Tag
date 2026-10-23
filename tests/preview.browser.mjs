@@ -29,7 +29,7 @@ try {
   assert.equal(await page.locator('#preview').textContent(), '');
   await list.nth(1).locator('[data-action="select"]').check();
   assert.deepEqual(await page.locator(`#preview ${namesSelector}`).allTextContents(), [secondName]);
-  assert.equal(await page.locator('#edit-form [name="ja"]').inputValue(), secondName);
+  assert.equal(await page.locator('#edit-form [name="ja"]').inputValue(), '');
   await list.nth(2).locator('[data-action="select"]').check();
   assert.deepEqual(await page.locator(`#preview ${namesSelector}`).allTextContents(), [secondName, thirdName]);
   assert.equal(await page.locator(`#preview .preview-current ${namesSelector}`).textContent(), thirdName);

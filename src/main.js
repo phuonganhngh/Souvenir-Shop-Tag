@@ -16,7 +16,7 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp
 const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
-let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
+let products = makeProducts(sample), activeId = products[0].id, editingId, workbook, storageWarning = false;
 let settings = { width: 77, height: 55 }, deletionHistory = [];
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
@@ -73,6 +73,7 @@ function save() {
   catch { if (!storageWarning) notify('ブラウザーにデータを保存できません。商品リストをExcelに書き出してください。', true); storageWarning = true; }
 }
 function active() { return products.find(p => p.id === activeId); }
+function editing() { return products.find(p => p.id === editingId); }
 function copies() { return products.filter(p => p.selected).reduce((sum, p) => sum + p.quantity, 0); }
 function perPage() { return Math.floor((190 + 4) / (settings.width + 4)) * Math.floor((277 + 4) / (settings.height + 4)); }
 function tag(product) {
@@ -113,40 +114,46 @@ function renderList() {
   renderPreview();
 }
 function renderEditor() {
-  const product = active();
+  const product = editing();
   for (const key of fields) {
     const input = $('#edit-form').elements.namedItem(key);
     input.value = product?.[key] || '';
-    input.disabled = !product;
+    input.disabled = false;
   }
 }
 function refresh() { renderList(); renderEditor(); save(); }
 
 $('#edit-form').addEventListener('submit', e => e.preventDefault());
 $('#edit-form').addEventListener('input', e => {
-  if (!active()) return;
-  active()[e.target.name] = e.target.value;
+  if (!fields.includes(e.target.name)) return;
+  const product = editing() || createEntry();
+  if (!product) return;
+  product[e.target.name] = e.target.value;
   renderList(); save();
 });
 $('#product-list').addEventListener('click', e => {
   const button = e.target.closest('[data-action="edit"]');
-  if (button) { activeId = button.closest('[data-id]').dataset.id; renderList(); renderEditor(); }
+  if (button) { activeId = editingId = button.closest('[data-id]').dataset.id; renderList(); renderEditor(); }
 });
 $('#product-list').addEventListener('change', e => {
   const row = e.target.closest('[data-id]');
   if (!row) return;
   const p = products.find(p => p.id === row.dataset.id);
-  if (e.target.dataset.action === 'select') { p.selected = e.target.checked; if (p.selected) activeId = p.id; }
+  if (e.target.dataset.action === 'select') { p.selected = e.target.checked; editingId = undefined; if (p.selected) activeId = p.id; }
   if (e.target.dataset.action === 'quantity') p.quantity = Math.min(100, Math.max(1, Math.floor(Number(e.target.value) || 1)));
   renderList(); renderEditor(); save();
 });
 $('#search').addEventListener('input', renderList);
-$('#select-all').addEventListener('change', e => { products.forEach(p => { p.selected = e.target.checked; }); refresh(); });
+$('#select-all').addEventListener('change', e => { editingId = undefined; products.forEach(p => { p.selected = e.target.checked; }); refresh(); });
+function createEntry() {
+  if (products.length >= 2000) { notify('商品は最大2,000件まで登録できます。', true); return null; }
+  const product = makeProducts([Object.fromEntries(fields.map(f => [f, '']))])[0];
+  products.unshift(product); activeId = editingId = product.id; $('#search').value = '';
+  return product;
+}
 $('#new-entry').addEventListener('click', () => {
-  if (products.length >= 2000) return notify('商品は最大2,000件まで登録できます。', true);
-  const p = makeProducts([Object.fromEntries(fields.map(f => [f, '']))])[0];
-  products.unshift(p); activeId = p.id; $('#search').value = ''; refresh();
-  $('#edit-form').elements.namedItem('ja').focus();
+  if (!createEntry()) return;
+  refresh(); $('#edit-form').elements.namedItem('ja').focus();
 });
 $('#delete').addEventListener('click', () => {
   const count = products.filter(p => p.selected).length;
@@ -154,6 +161,7 @@ $('#delete').addEventListener('click', () => {
   const result = deleteSelected(products);
   deletionHistory.push(result.action); products = result.rows;
   if (!active()) activeId = products[0]?.id;
+  if (!editing()) editingId = undefined;
   refresh(); notify(`${count}商品を削除しました。「元に戻す」で復元できます。`);
 });
 $('#undo').addEventListener('click', () => {
@@ -162,7 +170,7 @@ $('#undo').addEventListener('click', () => {
   $('#search').value = ''; refresh(); notify(`${action.entries.length}商品を元に戻しました。`);
 });
 function replaceProducts(rows) {
-  deletionHistory = []; products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
+  deletionHistory = []; editingId = undefined; products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
   notify(`${products.length}商品を取り込みました。印刷前に内容を確認してください。`);
 }
 let excelPromise;
