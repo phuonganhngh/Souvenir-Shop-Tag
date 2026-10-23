@@ -24,3 +24,5 @@
 .tag-header{height:80px;min-height:80px;gap:12px}.tag-nav{display:flex;align-items:center;gap:6px;margin-left:auto}.tag-nav [aria-current="page"]{background:#f0f3e9}.tag-header .button{font-size:12px;padding:10px 15px}@media(max-width:760px){.tag-header{padding:0 5%;height:73px;min-height:73px;gap:5px}.tag-header .button{font-size:11px;padding:9px}}
 
 .list-instructions{font-size:11px;line-height:1.9;color:#737e6a;margin:-6px 0 20px}.list-instructions p{margin:6px 0}.list-instructions strong{font-weight:600;color:#526347}.editor-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.editor-heading h3{font-size:12px;font-weight:500;margin:0}.editor-heading .text-button{white-space:nowrap}
+
+.list-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap}.list-actions .text-button{white-space:nowrap}.list-footer>span{flex-shrink:0}

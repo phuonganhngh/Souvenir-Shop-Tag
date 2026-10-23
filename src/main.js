@@ -5,6 +5,7 @@ import '@fontsource-variable/noto-sans-tc';
 import './style.css';
 import { renderSelectedPreview } from './preview.js';
 import { tagNavigation } from './navigation.js';
+import { deleteSelected, restoreDeleted, readDeletionHistory } from './deletion.js';
 import sample from './sample.json';
 import tagTemplate from './assets/souvenir-template.png';
 import { fields, headers, parsePrice, validate, readWorksheet } from './data.js';
@@ -15,15 +16,16 @@ const isPortable = __PORTABLE_BUILD__;
 const uid = () => crypto.randomUUID();
 const makeProducts = rows => rows.map(p => ({ ...p, id: uid(), selected: true, quantity: 1 }));
 let products = makeProducts(sample), activeId = products[0].id, workbook, storageWarning = false;
-let settings = { width: 77, height: 55 };
+let settings = { width: 77, height: 55 }, deletionHistory = [];
 try {
   const saved = JSON.parse(localStorage.getItem('tag-studio-v1'));
-  if (saved?.products?.length) {
+  if (Array.isArray(saved?.products)) {
+    deletionHistory = readDeletionHistory(saved.deletionHistory);
     products = saved.products;
     const sizeMap = { '90,55':[77,55], '100,60':[91,65], '180,110':[154,110], '77,55':[77,55], '91,65':[91,65], '154,110':[154,110] };
     const [width, height] = sizeMap[`${saved.settings?.width},${saved.settings?.height}`] || [77,55];
     settings = { width, height };
-    activeId = products[0].id;
+    activeId = products[0]?.id;
   }
 } catch { storageWarning = true; }
 
@@ -36,14 +38,14 @@ document.querySelector('#app').innerHTML = `
   <div class="workspace">
     <section class="panel data-panel">
       <div class="section-heading"><div><span class="section-number">01</span><h2>商品リスト</h2></div><span id="total" class="pill"></span></div>
-<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「商品を編集」で行えます。</p></div>
+<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「商品を編集」で行えます。自動翻訳機能はありません。</p></div>
       <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><strong>Excelファイルを取り込む</strong><span>ファイルをドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・2,000商品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
       <div class="upload-options"><button id="template" class="text-button">↓ Excelテンプレート</button></div>
 
       <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="商品名を検索…" aria-label="商品を検索"></label></div>
       <div class="list-columns"><label><input type="checkbox" id="select-all" checked aria-label="すべて選択"> 商品</label><span>価格 / 部数</span></div>
       <div id="product-list" class="product-list"></div>
-      <div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の商品を削除</button></div>
+      <div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した商品を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す（Undo）</button></div></div>
       <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">商品を編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${fields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${['日本語の商品名 *','英語','韓国語','中国語（簡体字）','中国語（繁体字）','販売価格（円）*','税表示・備考'][i]}<input name="${key}" ${key === 'price' ? 'inputmode="numeric"' : ''} placeholder="${key === 'note' ? '例：税込・各種（未確認の場合は空欄）' : ''}"></label>`).join('')}</div><p class="form-hint">商品名と翻訳はExcelの内容をそのまま使用します。自動翻訳や税表示の自動追加は行いません。</p></form><button id="export" type="button" class="button">↓ 編集した商品リストをExcelに書き出す</button></section>
     </section>
     <aside class="preview-column">
@@ -66,7 +68,7 @@ function notify(message, error = false) {
   $('#notice').hidden = false;
 }
 function save() {
-  try { localStorage.setItem('tag-studio-v1', JSON.stringify({ products, settings })); }
+  try { localStorage.setItem('tag-studio-v1', JSON.stringify({ products, settings, deletionHistory })); }
   catch { if (!storageWarning) notify('ブラウザーにデータを保存できません。商品リストをExcelに書き出してください。', true); storageWarning = true; }
 }
 function active() { return products.find(p => p.id === activeId); }
@@ -96,6 +98,8 @@ function renderPreview() {
   $('#print-count').textContent = `${n}枚・A4 ${Math.ceil(n / perPage())}ページ`;
   $('#selected-summary').textContent = `${products.filter(p => p.selected).length}商品を選択・合計${n}枚`;
   $('#print').disabled = n === 0;
+  $('#delete').disabled = !products.some(p => p.selected);
+  $('#undo').disabled = !deletionHistory.length;
   requestAnimationFrame(() => fitTags($('#preview')));
 }
 function renderList() {
@@ -114,7 +118,6 @@ function renderEditor() {
     input.value = product?.[key] || '';
     input.disabled = !product;
   }
-  $('#delete').disabled = !product;
 }
 function refresh() { renderList(); renderEditor(); save(); }
 
@@ -145,12 +148,20 @@ $('#new-entry').addEventListener('click', () => {
   $('#edit-form').elements.namedItem('ja').focus();
 });
 $('#delete').addEventListener('click', () => {
-  const p = active();
-  if (!p || !confirm(`「${p.ja || '新しい商品'}」を削除しますか？`)) return;
-  products = products.filter(item => item.id !== activeId); activeId = products[0]?.id; refresh();
+  const count = products.filter(p => p.selected).length;
+  if (!count || !confirm(`選択した${count}商品を削除しますか？削除後は「元に戻す（Undo）」で復元できます。`)) return;
+  const result = deleteSelected(products);
+  deletionHistory.push(result.action); products = result.rows;
+  if (!active()) activeId = products[0]?.id;
+  refresh(); notify(`${count}商品を削除しました。「元に戻す（Undo）」で復元できます。`);
+});
+$('#undo').addEventListener('click', () => {
+  const action = deletionHistory.pop(); if (!action) return;
+  products = restoreDeleted(products, action); activeId = action.entries[0].item.id;
+  $('#search').value = ''; refresh(); notify(`${action.entries.length}商品を元に戻しました。`);
 });
 function replaceProducts(rows) {
-  products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
+  deletionHistory = []; products = makeProducts(rows); activeId = products[0].id; $('#search').value = ''; refresh();
   notify(`${products.length}商品を取り込みました。印刷前に内容を確認してください。`);
 }
 let excelPromise;

@@ -6,6 +6,7 @@ import './style.css';
 import './restaurant.css';
 import { renderSelectedPreview } from './preview.js';
 import { tagNavigation } from './navigation.js';
+import { deleteSelected, restoreDeleted, readDeletionHistory } from './deletion.js';
 import template from './assets/restaurant-template.png';
 import initialMenu from './restaurant-menu.json';
 import { nameFields, nameHeaders, allergenHeaders, readMenuWorkbook, writeMenuWorkbook } from './restaurant-data.js';
@@ -14,11 +15,13 @@ const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const storageKey = 'restaurant-tags-menu-20261022-72ec5f55';
 const makeMenus = input => Object.fromEntries(Object.entries(input).map(([meal, rows]) => [meal, rows.map(p => ({ ...p, allergens: [...p.allergens], id: crypto.randomUUID(), selected: true, quantity: 1 }))]));
+let deletionHistory = {};
 let menus = makeMenus(initialMenu), meal = '夕食', activeId, settings = { width: 91, height: 65 }, storageWarning = false;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey));
   if (saved?.menus && Object.values(saved.menus).every(rows => Array.isArray(rows) && rows.every(p => typeof p.ja === 'string' && p.allergens?.length === 11 && p.allergens.every(v => v === null || typeof v === 'boolean') && typeof p.id === 'string' && Number.isInteger(p.quantity) && p.quantity >= 1 && p.quantity <= 100))) {
     menus = saved.menus;
+    deletionHistory = Object.fromEntries(Object.keys(menus).map(name => [name, readDeletionHistory(saved.deletionHistory?.[name])]));
     meal = saved.meal in menus ? saved.meal : Object.keys(menus)[0];
     if (['77,55', '91,65', '154,110'].includes(`${saved.settings?.width},${saved.settings?.height}`)) settings = saved.settings;
   }
@@ -31,16 +34,16 @@ $('#app').innerHTML = `
 <div id="notice" class="notice" role="status" hidden></div>
 <div class="workspace"><section class="panel data-panel">
 <div class="section-heading"><div><span class="section-number">01</span><h2>メニューとアレルギー</h2></div><span id="total" class="pill"></span></div>
-<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「料理名・アレルギーを編集」で行えます。</p></div>
+<div class="list-instructions"><p><strong>一括追加：</strong>Excelリストをアップロードしてください。ChatGPTまたはGeminiで翻訳し、ChatGPTで翻訳した場合はGeminiで、Geminiで翻訳した場合はChatGPTで照合してください。</p><p><strong>手入力での追加・編集：</strong>「料理名・アレルギーを編集」で行えます。自動翻訳機能はありません。</p></div>
 <label class="upload-zone" id="drop-zone" for="excel-input"><span class="upload-icon">↑</span><strong>メニューExcelを取り込む</strong><span>ドラッグするか、<u>端末から選択</u></span><small>.xlsx · 最大5 MB・合計2,000品</small><input id="excel-input" type="file" accept=".xlsx" hidden></label>
 <div class="upload-options"><a class="text-button" href="./downloads/Restaurant_Menu.xlsx" download>↓ 最新のメニューExcel</a><span>取り込みは現在の全メニューを置き換えます</span></div>
 <div class="meal-tabs" role="group" aria-label="メニューの区分" id="meal-tabs"></div>
 <div class="list-toolbar"><label class="search">⌕ <input id="search" placeholder="料理名を検索…" aria-label="料理を検索"></label></div>
 <div class="list-columns"><label><input type="checkbox" id="select-all" aria-label="この区分をすべて選択">料理</label><span>部数</span></div>
-<div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><button id="delete" class="text-button danger">編集中の料理を削除</button></div>
+<div id="product-list" class="product-list"></div><div class="list-footer"><span id="selected-summary"></span><div class="list-actions"><button id="delete" class="text-button danger" type="button">選択した料理を削除</button><button id="undo" class="text-button" type="button" disabled>元に戻す（Undo）</button></div></div>
 <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
 <fieldset class="allergen-editor"><legend>含まれる項目にチェック</legend>${allergenHeaders.map((label, i) => `<label><input type="checkbox" name="allergen-${i}" data-allergen="${i}">${label}</label>`).join('')}</fieldset>
-<p class="form-hint">アレルギー表示はExcelの内容を使用します。料理名から推測しません。</p></form>
+</form>
 <button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button></section>
 </section>
 <aside class="preview-column"><section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div></div><div class="preview-stage"><div id="preview" role="region" aria-label="選択した料理のプレビュー" tabindex="0"></div></div></section>
@@ -53,7 +56,7 @@ $('#app').innerHTML = `
 `;
 function notify(text, error = false) { $('#notice').textContent = text; $('#notice').classList.toggle('error', error); $('#notice').hidden = false; }
 function save() {
-  try { localStorage.setItem(storageKey, JSON.stringify({ menus, meal, settings })); }
+  try { localStorage.setItem(storageKey, JSON.stringify({ menus, meal, settings, deletionHistory })); }
   catch { if (!storageWarning) notify('端末に保存できません。画面を閉じる前にExcelに書き出してください。', true); storageWarning = true; }
 }
 const rows = () => menus[meal] || [];
@@ -79,6 +82,8 @@ function renderPreview() {
   $('#print-count').textContent = `${meal} ${copies()}枚・A4 ${Math.ceil(copies() / perPage())}ページ`;
   $('#selected-summary').textContent = `${selected().length}品を選択・合計${copies()}枚`;
   $('#print').disabled = !copies();
+  $('#delete').disabled = !selected().length;
+  $('#undo').disabled = !deletionHistory[meal]?.length;
   requestAnimationFrame(() => fitTags($('#preview')));
 }
 function renderList() {
@@ -94,7 +99,6 @@ function renderEditor() {
   const p = active();
   nameFields.forEach(key => { const input = $('#edit-form').elements.namedItem(key); input.value = p?.[key] || ''; input.disabled = !p; });
   $('#edit-form').querySelectorAll('[data-allergen]').forEach(input => { input.checked = p?.allergens[Number(input.dataset.allergen)] === true; input.disabled = !p; });
-  $('#delete').disabled = !p;
 }
 function refresh() { renderList(); renderEditor(); save(); }
 $('#meal-tabs').addEventListener('click', e => {
@@ -123,8 +127,17 @@ $('#new-entry').addEventListener('click', () => {
   rows().unshift(p); activeId = p.id; $('#search').value = ''; refresh(); $('#edit-form').elements.namedItem('ja').focus();
 });
 $('#delete').addEventListener('click', () => {
-  const p = active(); if (!p || !confirm(`「${p.ja || '新しい料理'}」を削除しますか？`)) return;
-  menus[meal] = rows().filter(item => item.id !== activeId); activeId = rows()[0]?.id; refresh();
+  const count = selected().length;
+  if (!count || !confirm(`${meal}の選択した${count}品を削除しますか？削除後は「元に戻す（Undo）」で復元できます。`)) return;
+  const result = deleteSelected(rows());
+  (deletionHistory[meal] ||= []).push(result.action); menus[meal] = result.rows;
+  if (!active()) activeId = rows()[0]?.id;
+  refresh(); notify(`${meal}の${count}品を削除しました。「元に戻す（Undo）」で復元できます。`);
+});
+$('#undo').addEventListener('click', () => {
+  const action = deletionHistory[meal]?.pop(); if (!action) return;
+  menus[meal] = restoreDeleted(rows(), action); activeId = action.entries[0].item.id;
+  $('#search').value = ''; refresh(); notify(`${meal}の${action.entries.length}品を元に戻しました。`);
 });
 let excelPromise;
 const excel = () => excelPromise ||= import('exceljs').then(m => m.default);
@@ -136,7 +149,7 @@ async function loadExcel(file) {
     const Excel = await excel(), book = new Excel.Workbook(); await book.xlsx.load(await file.arrayBuffer());
     const next = readMenuWorkbook(book);
     if (!confirm('取り込むExcelで朝食・夕食のリスト全体を置き換えます。未保存の編集内容は失われます。続けますか？')) return notify('取り込みをキャンセルしました。');
-    menus = makeMenus(next); meal = meal in menus ? meal : Object.keys(menus)[0]; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
+    deletionHistory = {}; menus = makeMenus(next); meal = meal in menus ? meal : Object.keys(menus)[0]; activeId = rows()[0]?.id; $('#search').value = ''; refresh();
     notify(`${Object.values(menus).reduce((n, a) => n + a.length, 0)}品を取り込みました。アレルギー表示を確認してください。`);
   } catch (error) { notify(`取り込みできません：${error.message}`, true); }
 }
