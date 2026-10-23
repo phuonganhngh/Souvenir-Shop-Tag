@@ -44,7 +44,7 @@ $('#app').innerHTML = `
 <section class="editor" aria-labelledby="editor-title"><div class="editor-heading"><h3 id="editor-title">料理名・アレルギーを編集</h3><button id="new-entry" class="text-button" type="button">新規入力</button></div><form id="edit-form"><div class="form-grid">${nameFields.map((key, i) => `<label class="${key === 'ja' ? 'wide' : ''}">${nameHeaders[i]}${key === 'ja' ? ' *' : ''}<input name="${key}" maxlength="500"></label>`).join('')}</div>
 <fieldset class="allergen-editor"><legend>含まれる項目にチェック</legend>${allergenHeaders.map((label, i) => `<label><input type="checkbox" name="allergen-${i}" data-allergen="${i}">${label}</label>`).join('')}</fieldset>
 </form>
-<button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button></section>
+<button id="export" type="button" class="button full">↓ 編集した全メニューをExcelに書き出す</button><p class="form-hint">追加・編集した内容を保存するには、新しいExcelファイルとして書き出してください。</p></section>
 </section>
 <aside class="preview-column"><section class="panel preview-panel"><div class="section-heading"><div><span class="section-number">02</span><h2>タグのプレビュー</h2></div></div><div class="preview-stage"><div id="preview" role="region" aria-label="選択した料理のプレビュー" tabindex="0"></div></div></section>
 <section class="panel settings-panel"><div class="section-heading"><div><span class="section-number">03</span><h2>印刷設定</h2></div><span class="pill">A4</span></div>
